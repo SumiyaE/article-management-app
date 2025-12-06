@@ -5,10 +5,12 @@ info: # [必須] APIの基本情報
   description: 記事の一覧を取得するAPI
 
 servers: # APIサーバーのURL
-  - url: https://api.example.com/v1
+  - url: https://api.content-platform.com/v1
 paths: # 「必須」エンドポイント（URLパス）の定義
   /articles: # パス
     get: # HTTPメソッド
+      operationId: getArticles
+      security: [] # セキュリティ設定（今回は無し）
       summary: DBのarticlesテーブルから記事の一覧を取得する
       responses: # レスポンスの定義
         "200":
