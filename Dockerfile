@@ -12,6 +12,12 @@ RUN npm run build
 FROM node:24-bookworm-slim
 
 WORKDIR /app
+# OSパッケージを更新してセキュリティパッチを適用し、apt キャッシュを削除してイメージサイズを縮小します
+RUN DEBIAN_FRONTEND=noninteractive apt-get update \
+    && apt-get upgrade -y \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY package*.json ./
 RUN npm install --omit=dev
 COPY --from=builder /app/dist ./dist
