@@ -41,9 +41,11 @@ describe('ArticlesService', () => {
 
   const mockRepository = {
     find: jest.fn().mockResolvedValue(mockArticles),
-    findOneBy: jest.fn().mockImplementation(({ id }) =>
-      Promise.resolve(mockArticles.find((article) => article.id === id) || null),
-    ),
+    findOneBy: jest.fn().mockImplementation(({ id }) => {
+      const found = mockArticles.find((article) => article.id === id);
+      if (!found) return Promise.resolve(null);
+      return Promise.resolve(Object.assign(new Article(), found));
+    }),
     save: jest.fn().mockImplementation((article) => {
       const saved = Object.assign(new Article(), {
         id: 3,
@@ -54,6 +56,8 @@ describe('ArticlesService', () => {
       });
       return Promise.resolve(saved);
     }),
+    update: jest.fn().mockResolvedValue({ affected: 1 }),
+    delete: jest.fn().mockResolvedValue({ affected: 1 }),
   };
 
   beforeEach(async () => {
@@ -109,5 +113,23 @@ describe('ArticlesService', () => {
     expect(result.content).toBe(createArticleDto.content);
     expect(result.status).toBe(createArticleDto.status);
     expect(mockRepository.save).toHaveBeenCalledWith(createArticleDto);
+  });
+
+  it('update()で記事の更新ができること', async () => {
+    const updateArticleDto = {
+      title: '変更後のタイトル',
+    };
+
+    const result = await service.update(1, updateArticleDto);
+
+    expect(result.affected).toBe(1);
+    expect(mockRepository.update).toHaveBeenCalledWith(1, updateArticleDto);
+  });
+
+  it('remove()で記事の削除ができること', async () => {
+    const result = await service.remove(1);
+
+    expect(result.affected).toBe(1);
+    expect(mockRepository.delete).toHaveBeenCalledWith(1);
   });
 });
