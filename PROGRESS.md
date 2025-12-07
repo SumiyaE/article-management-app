@@ -99,14 +99,15 @@
 
 ## 課題要件に沿ったAPI仕様書の作成のためのタスクの分解
 ### 記事に表示するのに必要なデータを全てDBのカラムに追加
-- [ ] userテーブルの作成 (id, name, thumbnail_image, created_at, updated_at)
-- [ ] articlesテーブルにカラムを追加（userid, status, created_at, updated_at）
+- [x] userテーブルの作成 (id, name, thumbnail_image, created_at, updated_at)
+- [x] articlesテーブルにカラムを追加（userid, status, created_at, updated_at）
+
+## 記事の削除、タイトル、内容の編集をするAPIの作成
+- [ ] ID指定でarticleを編集するAPIを作成
 
 ## 記事一覧
 
-## 記事の削除、タイトル、内容の編集をするAPIの作成
-- [ ] articlesを作成するAPIを作成
-- [ ] ID指定でarticleを編集
+
 
 
 ## 「下書き」を実装

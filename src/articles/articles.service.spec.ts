@@ -44,6 +44,16 @@ describe('ArticlesService', () => {
     findOneBy: jest.fn().mockImplementation(({ id }) =>
       Promise.resolve(mockArticles.find((article) => article.id === id) || null),
     ),
+    save: jest.fn().mockImplementation((article) => {
+      const saved = Object.assign(new Article(), {
+        id: 3,
+        ...article,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        user: mockUser,
+      });
+      return Promise.resolve(saved);
+    }),
   };
 
   beforeEach(async () => {
@@ -82,5 +92,22 @@ describe('ArticlesService', () => {
   it('findOne()が存在しないIDの場合nullを返すこと', async () => {
     const result = await service.findOne(999);
     expect(result).toBeNull();
+  });
+
+  it('create()で記事の作成ができること', async () => {
+    const createArticleDto = {
+      title: '新しい記事',
+      content: 'これは新しい記事の内容です。',
+      status: 'draft' as const,
+      userId: 1,
+    };
+
+    const result = await service.create(createArticleDto);
+
+    expect(result).toBeInstanceOf(Article);
+    expect(result.title).toBe(createArticleDto.title);
+    expect(result.content).toBe(createArticleDto.content);
+    expect(result.status).toBe(createArticleDto.status);
+    expect(mockRepository.save).toHaveBeenCalledWith(createArticleDto);
   });
 });
