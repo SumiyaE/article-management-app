@@ -1,9 +1,19 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { NotFoundException } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { PaginateQuery } from 'nestjs-paginate';
+import { paginate } from 'nestjs-paginate';
 import { ArticlesService } from './articles.service';
 import { Article } from './entities/article.entity';
 import { User } from '../users/entities/user.entity';
 import { Organization } from '../organizations/entities/organization.entity';
+
+// nestjs-paginate のモック
+jest.mock('nestjs-paginate', () => ({
+  ...jest.requireActual('nestjs-paginate'),
+  paginate: jest.fn(),
+}));
+
 
 // ============================================
 // ファクトリ関数
@@ -79,84 +89,53 @@ describe('ArticlesService', () => {
   // findAll
   // ============================================
   describe('findAll', () => {
-    it('記事の一覧を返す', async () => {
+    const mockQuery: PaginateQuery = { path: '/articles' };
+
+    it('ページネーション付きで記事の一覧を返す', async () => {
       const mockArticles = [
         createMockArticle({ id: 1, title: '記事1' }),
         createMockArticle({ id: 2, title: '記事2' }),
       ];
-      mockRepository.find.mockResolvedValue(mockArticles);
-
-      const result = await service.findAll();
-
-      expect(result).toHaveLength(2);
-      expect(result).toEqual(mockArticles);
-      expect(mockRepository.find).toHaveBeenCalledTimes(1);
-    });
-
-    it('記事がない場合は空配列を返す', async () => {
-      mockRepository.find.mockResolvedValue([]);
-
-      const result = await service.findAll();
-
-      expect(result).toEqual([]);
-    });
-  });
-
-  // ============================================
-  // findByOrganizationId
-  // ============================================
-  describe('findByOrganizationId', () => {
-    it('指定した組織の記事一覧を返す', async () => {
-      const mockArticles = [createMockArticle({ id: 1, title: '組織1の記事' })];
-      mockRepository.find.mockResolvedValue(mockArticles);
-
-      const result = await service.findByOrganizationId(1);
-
-      expect(result).toEqual(mockArticles);
-      expect(mockRepository.find).toHaveBeenCalledWith({
-        relations: ['user'],
-        where: {
-          user: {
-            organization: { id: 1 },
-          },
+      const mockPaginatedResult = {
+        data: mockArticles,
+        meta: {
+          itemsPerPage: 20,
+          totalItems: 2,
+          currentPage: 1,
+          totalPages: 1,
         },
-      });
-    });
-
-    it('該当する記事がない場合は空配列を返す', async () => {
-      mockRepository.find.mockResolvedValue([]);
-
-      const result = await service.findByOrganizationId(999);
-
-      expect(result).toEqual([]);
-    });
-  });
-
-  // ============================================
-  // findByUserId
-  // ============================================
-  describe('findByUserId', () => {
-    it('指定したユーザーの記事一覧を返す', async () => {
-      const mockArticles = [createMockArticle({ id: 1, title: 'ユーザー1の記事' })];
-      mockRepository.find.mockResolvedValue(mockArticles);
-
-      const result = await service.findByUserId(1);
-
-      expect(result).toEqual(mockArticles);
-      expect(mockRepository.find).toHaveBeenCalledWith({
-        relations: ['user'],
-        where: {
-          user: { id: 1 },
+        links: {
+          current: '/articles?page=1',
         },
-      });
+      };
+      (paginate as jest.Mock).mockResolvedValue(mockPaginatedResult);
+
+      const result = await service.findAll(mockQuery);
+
+      expect(result.data).toHaveLength(2);
+      expect(result.meta.totalItems).toBe(2);
+      expect(paginate).toHaveBeenCalled();
     });
 
-    it('該当する記事がない場合は空配列を返す', async () => {
-      mockRepository.find.mockResolvedValue([]);
+    it('記事がない場合は空のデータを返す', async () => {
+      const mockPaginatedResult = {
+        data: [],
+        meta: {
+          itemsPerPage: 20,
+          totalItems: 0,
+          currentPage: 1,
+          totalPages: 0,
+        },
+        links: {
+          current: '/articles?page=1',
+        },
+      };
+      (paginate as jest.Mock).mockResolvedValue(mockPaginatedResult);
 
-      const result = await service.findByUserId(999);
+      const result = await service.findAll(mockQuery);
 
-      expect(result).toEqual([]);
+      expect(result.data).toEqual([]);
+      expect(result.meta.totalItems).toBe(0);
     });
   });
 
@@ -174,12 +153,10 @@ describe('ArticlesService', () => {
       expect(mockRepository.findOneBy).toHaveBeenCalledWith({ id: 1 });
     });
 
-    it('存在しないIDの場合はnullを返す', async () => {
+    it('存在しないIDの場合はNotFoundExceptionを投げる', async () => {
       mockRepository.findOneBy.mockResolvedValue(null);
 
-      const result = await service.findOne(999);
-
-      expect(result).toBeNull();
+      await expect(service.findOne(999)).rejects.toThrow(NotFoundException);
     });
   });
 

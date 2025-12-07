@@ -1,10 +1,21 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, UpdateResult, DeleteResult } from 'typeorm';
+import { paginate, Paginated, PaginateQuery, PaginateConfig, FilterOperator } from 'nestjs-paginate';
 import { Article } from './entities/article.entity';
 import { CreateArticleDto } from './dto/create-article.dto';
-import { UpdateResult } from 'typeorm';
-import { DeleteResult } from 'typeorm';
+
+export const ARTICLE_PAGINATION_CONFIG: PaginateConfig<Article> = {
+  sortableColumns: ['id', 'title', 'status', 'createdAt', 'updatedAt'],
+  defaultSortBy: [['createdAt', 'DESC']],
+  searchableColumns: ['title', 'content'],
+  relations: ['user', 'user.organization'],
+  filterableColumns: {
+    status: [FilterOperator.EQ, FilterOperator.IN],
+    'user.id': [FilterOperator.EQ, FilterOperator.IN],
+    'user.organization.id': [FilterOperator.EQ, FilterOperator.IN],
+  },
+};
 
 @Injectable()
 export class ArticlesService {
@@ -13,32 +24,16 @@ export class ArticlesService {
     private articlesRepository: Repository<Article>,
   ) { }
 
-  findAll(): Promise<Article[]> {
-    return this.articlesRepository.find();
+  findAll(query: PaginateQuery): Promise<Paginated<Article>> {
+    return paginate(query, this.articlesRepository, ARTICLE_PAGINATION_CONFIG);
   }
 
-  findByOrganizationId(organizationId: number): Promise<Article[]> {
-    return this.articlesRepository.find({
-      relations: ['user'],
-      where: {
-        user: {
-          organization: { id: organizationId },
-        },
-      },
-    });
-  }
-
-  findByUserId(userId: number): Promise<Article[]> {
-    return this.articlesRepository.find({
-      relations: ['user'],
-      where: {
-        user: { id: userId },
-      },
-    });
-  }
-
-  findOne(id: number): Promise<Article | null> {
-    return this.articlesRepository.findOneBy({ id });
+  async findOne(id: number): Promise<Article> {
+    const article = await this.articlesRepository.findOneBy({ id });
+    if (!article) {
+      throw new NotFoundException(`Article #${id} not found`);
+    }
+    return article;
   }
 
   create(createArticleDto: CreateArticleDto): Promise<Article> {
