@@ -103,9 +103,11 @@
 - [x] articlesテーブルにカラムを追加（userid, status, created_at, updated_at）
 
 ## 記事の削除、タイトル、内容の編集をするAPIの作成
-- [ ] ID指定でarticleを編集するAPIを作成
+- [x] ID指定でarticleを編集するAPIを作成
+- [x] ID指定でarticleを削除するAPIを作成
 
-## 記事一覧
+## 記事一覧でのソート、フィルター、ーページネーション
+- [ ] nestjs-paginateのライブラリインストール
 
 
 
