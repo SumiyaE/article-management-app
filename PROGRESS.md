@@ -28,10 +28,16 @@
 - [x] operationId, security の設定方法を理解
 - [x] Redocly CLIでバリデーションできる環境を構築
 
+### DDL（DB設計書）の学習
+- [x] MySQLのデータ型（BIGINT, VARCHAR, TEXT等）を理解
+- [x] 記事一覧を管理するテーブルのDDLを使用した設計書を作成
+
 ### 成果物
 - `simple_api/arcicles-api.yaml` - 学習用に作成した簡易API設計書
   - GET /articles（記事一覧取得）
   - GET /articles/{id}（記事1件取得）
+- `simple_api/articles-ddl.md` - 学習用に作成した簡易DB設計書
+  - articlesテーブル（id, title, content）
 
 ### 導入したツール
 - `@redocly/cli` - OpenAPIのバリデーション
@@ -39,8 +45,6 @@
 ---
 
 ## 次にやること
-### DDL（DB設計書）の学習 (/lerning_open_api)
-- [ ] 記事一覧を管理するテーブルのDDLを使用した設計書を作成
 
 ### 学習用に作成したAPI仕様書、DB設計書を元にNest.jsでAPIを作成(/learning_nest_js)
 - [ ] nest.jsの開発環境の構築
