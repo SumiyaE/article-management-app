@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ArticlesModule } from './articles/articles.module';
+import { UsersModule } from './users/users.module';
 import { Article } from './articles/entities/article.entity';
 import { User } from './users/entities/user.entity';
 
@@ -19,6 +20,7 @@ import { User } from './users/entities/user.entity';
       synchronize: true,
     }),
     ArticlesModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
