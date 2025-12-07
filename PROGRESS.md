@@ -42,12 +42,30 @@
 ### 導入したツール
 - `@redocly/cli` - OpenAPIのバリデーション
 - `redocly.yaml` - lintルール設定（minimal）
+
+### NestJS開発環境の構築
+- [x] NestJS v11系の開発環境を構築
+- [x] グローバルCLIを削除し、npxでローカル実行に統一
+- [x] 開発サーバーの起動確認（http://localhost:3000 で Hello World! 表示）
+
+### プロジェクト構成
+```
+/any_pre_work/
+├── src/                 # NestJSソースコード
+├── test/                # E2Eテスト
+├── simple_api/          # OpenAPI設計書
+├── nest-cli.json
+├── tsconfig.json
+├── eslint.config.mjs    # ESLint flat config
+└── package.json         # NestJS v11 + Redocly CLI
+```
+
 ---
 
 ## 次にやること
 
-### 学習用に作成したAPI仕様書、DB設計書を元にNest.jsでAPIを作成(/learning_nest_js)
-- [ ] nest.jsの開発環境の構築
+### 学習用に作成したAPI仕様書、DB設計書を元にNest.jsでAPIを作成
+- [x] nest.jsの開発環境の構築
 
 - [ ] DBにアクセスせず、固定で記事の一覧を返すAPIのテスト作成
 - [ ] DBにアクセスせず、固定で記事の一覧を返すAPIの作成
