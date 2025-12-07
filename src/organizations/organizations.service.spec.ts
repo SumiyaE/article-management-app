@@ -1,8 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { UsersService } from './users.service';
-import { User } from './entities/user.entity';
-import { Organization } from '../organizations/entities/organization.entity';
+import { OrganizationsService } from './organizations.service';
+import { Organization } from './entities/organization.entity';
 
 // ============================================
 // ファクトリ関数
@@ -18,22 +17,11 @@ const createMockOrganization = (overrides?: Partial<Organization>): Organization
   ...overrides,
 });
 
-const createMockUser = (overrides?: Partial<User>): User => ({
-  id: 1,
-  name: 'テストユーザー',
-  thumbnailImage: null,
-  createdAt: new Date('2024-01-01'),
-  updatedAt: new Date('2024-01-01'),
-  articles: [],
-  organization: createMockOrganization(),
-  ...overrides,
-});
-
 // ============================================
 // テスト本体
 // ============================================
-describe('UsersService', () => {
-  let service: UsersService;
+describe('OrganizationsService', () => {
+  let service: OrganizationsService;
   let mockRepository: Record<string, jest.Mock>;
 
   beforeEach(async () => {
@@ -47,15 +35,15 @@ describe('UsersService', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        UsersService,
+        OrganizationsService,
         {
-          provide: getRepositoryToken(User),
+          provide: getRepositoryToken(Organization),
           useValue: mockRepository,
         },
       ],
     }).compile();
 
-    service = module.get<UsersService>(UsersService);
+    service = module.get<OrganizationsService>(OrganizationsService);
   });
 
   it('Serviceが定義されていること', () => {
@@ -66,21 +54,21 @@ describe('UsersService', () => {
   // findAll
   // ============================================
   describe('findAll', () => {
-    it('ユーザーの一覧を返す', async () => {
-      const mockUsers = [
-        createMockUser({ id: 1, name: 'ユーザー1' }),
-        createMockUser({ id: 2, name: 'ユーザー2' }),
+    it('組織の一覧を返す', async () => {
+      const mockOrganizations = [
+        createMockOrganization({ id: 1, name: '組織1', slug: 'org-1' }),
+        createMockOrganization({ id: 2, name: '組織2', slug: 'org-2' }),
       ];
-      mockRepository.find.mockResolvedValue(mockUsers);
+      mockRepository.find.mockResolvedValue(mockOrganizations);
 
       const result = await service.findAll();
 
       expect(result).toHaveLength(2);
-      expect(result).toEqual(mockUsers);
+      expect(result).toEqual(mockOrganizations);
       expect(mockRepository.find).toHaveBeenCalledTimes(1);
     });
 
-    it('ユーザーがいない場合は空配列を返す', async () => {
+    it('組織がない場合は空配列を返す', async () => {
       mockRepository.find.mockResolvedValue([]);
 
       const result = await service.findAll();
@@ -93,13 +81,13 @@ describe('UsersService', () => {
   // findOne
   // ============================================
   describe('findOne', () => {
-    it('指定したIDのユーザーを返す', async () => {
-      const mockUser = createMockUser({ id: 1, name: '特定のユーザー' });
-      mockRepository.findOneBy.mockResolvedValue(mockUser);
+    it('指定したIDの組織を返す', async () => {
+      const mockOrganization = createMockOrganization({ id: 1, name: '特定の組織' });
+      mockRepository.findOneBy.mockResolvedValue(mockOrganization);
 
       const result = await service.findOne(1);
 
-      expect(result).toEqual(mockUser);
+      expect(result).toEqual(mockOrganization);
       expect(mockRepository.findOneBy).toHaveBeenCalledWith({ id: 1 });
     });
 
@@ -113,20 +101,45 @@ describe('UsersService', () => {
   });
 
   // ============================================
+  // findBySlug
+  // ============================================
+  describe('findBySlug', () => {
+    it('指定したslugの組織を返す', async () => {
+      const mockOrganization = createMockOrganization({ slug: 'my-org' });
+      mockRepository.findOneBy.mockResolvedValue(mockOrganization);
+
+      const result = await service.findBySlug('my-org');
+
+      expect(result).toEqual(mockOrganization);
+      expect(mockRepository.findOneBy).toHaveBeenCalledWith({ slug: 'my-org' });
+    });
+
+    it('存在しないslugの場合はnullを返す', async () => {
+      mockRepository.findOneBy.mockResolvedValue(null);
+
+      const result = await service.findBySlug('unknown-org');
+
+      expect(result).toBeNull();
+    });
+  });
+
+  // ============================================
   // create
   // ============================================
   describe('create', () => {
-    it('ユーザーを作成して返す', async () => {
+    it('組織を作成して返す', async () => {
       const dto = {
-        name: '新しいユーザー',
-        thumbnailImage: null,
+        name: '新しい組織',
+        slug: 'new-org',
+        description: '説明文',
       };
-      const savedUser = createMockUser({ id: 3, ...dto });
-      mockRepository.save.mockResolvedValue(savedUser);
+      const savedOrganization = createMockOrganization({ id: 3, ...dto });
+      mockRepository.save.mockResolvedValue(savedOrganization);
 
       const result = await service.create(dto);
 
       expect(result.name).toBe(dto.name);
+      expect(result.slug).toBe(dto.slug);
       expect(mockRepository.save).toHaveBeenCalledWith(dto);
     });
   });
@@ -135,7 +148,7 @@ describe('UsersService', () => {
   // update
   // ============================================
   describe('update', () => {
-    it('ユーザーを更新する', async () => {
+    it('組織を更新する', async () => {
       const dto = { name: '更新後の名前' };
       mockRepository.update.mockResolvedValue({ affected: 1 });
 
@@ -145,7 +158,7 @@ describe('UsersService', () => {
       expect(mockRepository.update).toHaveBeenCalledWith(1, dto);
     });
 
-    it('存在しないユーザーの場合はaffectedが0', async () => {
+    it('存在しない組織の場合はaffectedが0', async () => {
       mockRepository.update.mockResolvedValue({ affected: 0 });
 
       const result = await service.update(999, { name: 'test' });
@@ -158,7 +171,7 @@ describe('UsersService', () => {
   // remove
   // ============================================
   describe('remove', () => {
-    it('ユーザーを削除する', async () => {
+    it('組織を削除する', async () => {
       mockRepository.delete.mockResolvedValue({ affected: 1 });
 
       const result = await service.remove(1);
@@ -167,7 +180,7 @@ describe('UsersService', () => {
       expect(mockRepository.delete).toHaveBeenCalledWith(1);
     });
 
-    it('存在しないユーザーの場合はaffectedが0', async () => {
+    it('存在しない組織の場合はaffectedが0', async () => {
       mockRepository.delete.mockResolvedValue({ affected: 0 });
 
       const result = await service.remove(999);

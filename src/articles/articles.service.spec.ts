@@ -3,10 +3,22 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { ArticlesService } from './articles.service';
 import { Article } from './entities/article.entity';
 import { User } from '../users/entities/user.entity';
+import { Organization } from '../organizations/entities/organization.entity';
 
 // ============================================
 // ファクトリ関数
 // ============================================
+const createMockOrganization = (overrides?: Partial<Organization>): Organization => ({
+  id: 1,
+  name: 'テスト組織',
+  slug: 'test-org',
+  description: null,
+  createdAt: new Date('2024-01-01'),
+  updatedAt: new Date('2024-01-01'),
+  users: [],
+  ...overrides,
+});
+
 const createMockUser = (overrides?: Partial<User>): User => ({
   id: 1,
   name: 'テストユーザー',
@@ -14,6 +26,7 @@ const createMockUser = (overrides?: Partial<User>): User => ({
   createdAt: new Date('2024-01-01'),
   updatedAt: new Date('2024-01-01'),
   articles: [],
+  organization: createMockOrganization(),
   ...overrides,
 });
 
