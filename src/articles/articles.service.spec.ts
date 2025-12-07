@@ -1,66 +1,50 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { ArticlesService } from './articles.service';
 import { Article } from './entities/article.entity';
 import { User } from '../users/entities/user.entity';
 
+// ============================================
+// ファクトリ関数
+// ============================================
+const createMockUser = (overrides?: Partial<User>): User => ({
+  id: 1,
+  name: 'テストユーザー',
+  thumbnailImage: null,
+  createdAt: new Date('2024-01-01'),
+  updatedAt: new Date('2024-01-01'),
+  articles: [],
+  ...overrides,
+});
+
+const createMockArticle = (overrides?: Partial<Article>): Article => ({
+  id: 1,
+  title: 'テスト記事',
+  content: 'テスト本文',
+  status: 'draft',
+  createdAt: new Date('2024-01-01'),
+  updatedAt: new Date('2024-01-01'),
+  user: createMockUser(),
+  ...overrides,
+});
+
+// ============================================
+// テスト本体
+// ============================================
 describe('ArticlesService', () => {
   let service: ArticlesService;
-  let repository: Repository<Article>;
-
-  const mockUser: User = {
-    id: 1,
-    name: 'テストユーザー',
-    thumbnailImage: null,
-    createdAt: new Date('2024-01-01'),
-    updatedAt: new Date('2024-01-01'),
-    articles: [],
-  };
-
-  const mockArticles: Article[] = [
-    {
-      id: 1,
-      title: '最初の投稿',
-      content: 'これは初めての投稿です。',
-      status: 'published',
-      createdAt: new Date('2024-01-01'),
-      updatedAt: new Date('2024-01-01'),
-      user: mockUser,
-    },
-    {
-      id: 2,
-      title: '二つ目の投稿',
-      content: 'これは二つ目の投稿です',
-      status: 'draft',
-      createdAt: new Date('2024-01-02'),
-      updatedAt: new Date('2024-01-02'),
-      user: mockUser,
-    },
-  ];
-
-  const mockRepository = {
-    find: jest.fn().mockResolvedValue(mockArticles),
-    findOneBy: jest.fn().mockImplementation(({ id }) => {
-      const found = mockArticles.find((article) => article.id === id);
-      if (!found) return Promise.resolve(null);
-      return Promise.resolve(Object.assign(new Article(), found));
-    }),
-    save: jest.fn().mockImplementation((article) => {
-      const saved = Object.assign(new Article(), {
-        id: 3,
-        ...article,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        user: mockUser,
-      });
-      return Promise.resolve(saved);
-    }),
-    update: jest.fn().mockResolvedValue({ affected: 1 }),
-    delete: jest.fn().mockResolvedValue({ affected: 1 }),
-  };
+  let mockRepository: Record<string, jest.Mock>;
 
   beforeEach(async () => {
+    // 各テストでモックをリセット
+    mockRepository = {
+      find: jest.fn(),
+      findOneBy: jest.fn(),
+      save: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ArticlesService,
@@ -72,64 +56,126 @@ describe('ArticlesService', () => {
     }).compile();
 
     service = module.get<ArticlesService>(ArticlesService);
-    repository = module.get<Repository<Article>>(getRepositoryToken(Article));
   });
 
   it('Serviceが定義されていること', () => {
     expect(service).toBeDefined();
   });
 
-  it('findAll()が記事の一覧を返すこと', async () => {
-    const result = await service.findAll();
-    expect(result).toEqual(mockArticles);
-    expect(mockRepository.find).toHaveBeenCalled();
+  // ============================================
+  // findAll
+  // ============================================
+  describe('findAll', () => {
+    it('記事の一覧を返す', async () => {
+      const mockArticles = [
+        createMockArticle({ id: 1, title: '記事1' }),
+        createMockArticle({ id: 2, title: '記事2' }),
+      ];
+      mockRepository.find.mockResolvedValue(mockArticles);
+
+      const result = await service.findAll();
+
+      expect(result).toHaveLength(2);
+      expect(result).toEqual(mockArticles);
+      expect(mockRepository.find).toHaveBeenCalledTimes(1);
+    });
+
+    it('記事がない場合は空配列を返す', async () => {
+      mockRepository.find.mockResolvedValue([]);
+
+      const result = await service.findAll();
+
+      expect(result).toEqual([]);
+    });
   });
 
-  it('findOne()が指定したIDの記事を返すこと', async () => {
-    const result1 = await service.findOne(1);
-    expect(result1).toEqual(mockArticles[0]);
+  // ============================================
+  // findOne
+  // ============================================
+  describe('findOne', () => {
+    it('指定したIDの記事を返す', async () => {
+      const mockArticle = createMockArticle({ id: 1, title: '特定の記事' });
+      mockRepository.findOneBy.mockResolvedValue(mockArticle);
 
-    const result2 = await service.findOne(2);
-    expect(result2).toEqual(mockArticles[1]);
+      const result = await service.findOne(1);
+
+      expect(result).toEqual(mockArticle);
+      expect(mockRepository.findOneBy).toHaveBeenCalledWith({ id: 1 });
+    });
+
+    it('存在しないIDの場合はnullを返す', async () => {
+      mockRepository.findOneBy.mockResolvedValue(null);
+
+      const result = await service.findOne(999);
+
+      expect(result).toBeNull();
+    });
   });
 
-  it('findOne()が存在しないIDの場合nullを返すこと', async () => {
-    const result = await service.findOne(999);
-    expect(result).toBeNull();
+  // ============================================
+  // create
+  // ============================================
+  describe('create', () => {
+    it('記事を作成して返す', async () => {
+      const dto = {
+        title: '新しい記事',
+        content: '新しい内容',
+        status: 'draft' as const,
+        userId: 1,
+      };
+      const savedArticle = createMockArticle({ id: 3, ...dto });
+      mockRepository.save.mockResolvedValue(savedArticle);
+
+      const result = await service.create(dto);
+
+      expect(result.title).toBe(dto.title);
+      expect(result.content).toBe(dto.content);
+      expect(mockRepository.save).toHaveBeenCalledWith(dto);
+    });
   });
 
-  it('create()で記事の作成ができること', async () => {
-    const createArticleDto = {
-      title: '新しい記事',
-      content: 'これは新しい記事の内容です。',
-      status: 'draft' as const,
-      userId: 1,
-    };
+  // ============================================
+  // update
+  // ============================================
+  describe('update', () => {
+    it('記事を更新する', async () => {
+      const dto = { title: '更新後のタイトル' };
+      mockRepository.update.mockResolvedValue({ affected: 1 });
 
-    const result = await service.create(createArticleDto);
+      const result = await service.update(1, dto);
 
-    expect(result).toBeInstanceOf(Article);
-    expect(result.title).toBe(createArticleDto.title);
-    expect(result.content).toBe(createArticleDto.content);
-    expect(result.status).toBe(createArticleDto.status);
-    expect(mockRepository.save).toHaveBeenCalledWith(createArticleDto);
+      expect(result.affected).toBe(1);
+      expect(mockRepository.update).toHaveBeenCalledWith(1, dto);
+    });
+
+    it('存在しない記事の場合はaffectedが0', async () => {
+      mockRepository.update.mockResolvedValue({ affected: 0 });
+
+      const result = await service.update(999, { title: 'test' });
+
+      expect(result.affected).toBe(0);
+    });
   });
 
-  it('update()で記事の更新ができること', async () => {
-    const updateArticleDto = {
-      title: '変更後のタイトル',
-    };
+  // ============================================
+  // remove
+  // ============================================
+  describe('remove', () => {
+    it('記事を削除する', async () => {
+      mockRepository.delete.mockResolvedValue({ affected: 1 });
 
-    const result = await service.update(1, updateArticleDto);
+      const result = await service.remove(1);
 
-    expect(result.affected).toBe(1);
-    expect(mockRepository.update).toHaveBeenCalledWith(1, updateArticleDto);
-  });
+      expect(result.affected).toBe(1);
+      expect(mockRepository.delete).toHaveBeenCalledWith(1);
+    });
 
-  it('remove()で記事の削除ができること', async () => {
-    const result = await service.remove(1);
+    it('存在しない記事の場合はaffectedが0', async () => {
+      mockRepository.delete.mockResolvedValue({ affected: 0 });
 
-    expect(result.affected).toBe(1);
-    expect(mockRepository.delete).toHaveBeenCalledWith(1);
+      const result = await service.remove(999);
+
+      expect(result.affected).toBe(0);
+    });
   });
 });
