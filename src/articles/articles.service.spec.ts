@@ -103,6 +103,64 @@ describe('ArticlesService', () => {
   });
 
   // ============================================
+  // findByOrganizationId
+  // ============================================
+  describe('findByOrganizationId', () => {
+    it('指定した組織の記事一覧を返す', async () => {
+      const mockArticles = [createMockArticle({ id: 1, title: '組織1の記事' })];
+      mockRepository.find.mockResolvedValue(mockArticles);
+
+      const result = await service.findByOrganizationId(1);
+
+      expect(result).toEqual(mockArticles);
+      expect(mockRepository.find).toHaveBeenCalledWith({
+        relations: ['user'],
+        where: {
+          user: {
+            organization: { id: 1 },
+          },
+        },
+      });
+    });
+
+    it('該当する記事がない場合は空配列を返す', async () => {
+      mockRepository.find.mockResolvedValue([]);
+
+      const result = await service.findByOrganizationId(999);
+
+      expect(result).toEqual([]);
+    });
+  });
+
+  // ============================================
+  // findByUserId
+  // ============================================
+  describe('findByUserId', () => {
+    it('指定したユーザーの記事一覧を返す', async () => {
+      const mockArticles = [createMockArticle({ id: 1, title: 'ユーザー1の記事' })];
+      mockRepository.find.mockResolvedValue(mockArticles);
+
+      const result = await service.findByUserId(1);
+
+      expect(result).toEqual(mockArticles);
+      expect(mockRepository.find).toHaveBeenCalledWith({
+        relations: ['user'],
+        where: {
+          user: { id: 1 },
+        },
+      });
+    });
+
+    it('該当する記事がない場合は空配列を返す', async () => {
+      mockRepository.find.mockResolvedValue([]);
+
+      const result = await service.findByUserId(999);
+
+      expect(result).toEqual([]);
+    });
+  });
+
+  // ============================================
   // findOne
   // ============================================
   describe('findOne', () => {

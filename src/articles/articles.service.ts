@@ -17,6 +17,26 @@ export class ArticlesService {
     return this.articlesRepository.find();
   }
 
+  findByOrganizationId(organizationId: number): Promise<Article[]> {
+    return this.articlesRepository.find({
+      relations: ['user'],
+      where: {
+        user: {
+          organization: { id: organizationId },
+        },
+      },
+    });
+  }
+
+  findByUserId(userId: number): Promise<Article[]> {
+    return this.articlesRepository.find({
+      relations: ['user'],
+      where: {
+        user: { id: userId },
+      },
+    });
+  }
+
   findOne(id: number): Promise<Article | null> {
     return this.articlesRepository.findOneBy({ id });
   }

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Delete, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Delete, Param, Query } from '@nestjs/common';
 import { ArticlesService } from './articles.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
@@ -13,7 +13,16 @@ export class ArticlesController {
   }
 
   @Get()
-  findAll() {
+  findAll(
+    @Query('organizationId') organizationId?: string,
+    @Query('userId') userId?: string,
+  ) {
+    if (organizationId) {
+      return this.articlesService.findByOrganizationId(+organizationId);
+    }
+    if (userId) {
+      return this.articlesService.findByUserId(+userId);
+    }
     return this.articlesService.findAll();
   }
 
