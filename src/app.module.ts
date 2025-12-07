@@ -4,6 +4,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ArticlesModule } from './articles/articles.module';
 import { Article } from './articles/entities/article.entity';
+import { User } from './users/entities/user.entity';
 
 @Module({
   imports: [
@@ -14,7 +15,7 @@ import { Article } from './articles/entities/article.entity';
       username: process.env.DB_USERNAME || 'root',
       password: process.env.DB_PASSWORD || 'root',
       database: process.env.DB_DATABASE || 'articles_db',
-      entities: [Article],
+      entities: [Article, User],
       synchronize: true,
     }),
     ArticlesModule,

@@ -3,14 +3,40 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ArticlesService } from './articles.service';
 import { Article } from './entities/article.entity';
+import { User } from '../users/entities/user.entity';
 
 describe('ArticlesService', () => {
   let service: ArticlesService;
   let repository: Repository<Article>;
 
+  const mockUser: User = {
+    id: 1,
+    name: 'テストユーザー',
+    thumbnailImage: null,
+    createdAt: new Date('2024-01-01'),
+    updatedAt: new Date('2024-01-01'),
+    articles: [],
+  };
+
   const mockArticles: Article[] = [
-    { id: 1, title: '最初の投稿', content: 'これは初めての投稿です。' },
-    { id: 2, title: '二つ目の投稿', content: 'これは二つ目の投稿です' },
+    {
+      id: 1,
+      title: '最初の投稿',
+      content: 'これは初めての投稿です。',
+      status: 'published',
+      createdAt: new Date('2024-01-01'),
+      updatedAt: new Date('2024-01-01'),
+      user: mockUser,
+    },
+    {
+      id: 2,
+      title: '二つ目の投稿',
+      content: 'これは二つ目の投稿です',
+      status: 'draft',
+      createdAt: new Date('2024-01-02'),
+      updatedAt: new Date('2024-01-02'),
+      user: mockUser,
+    },
   ];
 
   const mockRepository = {
