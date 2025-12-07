@@ -16,5 +16,5 @@ describe('ArticlesService', () => {
     expect(service).toBeDefined();
   });
 
-  it('')
+  it('findAllで記事の一覧が取得できること')
 });

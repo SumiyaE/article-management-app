@@ -5,12 +5,12 @@ import { UpdateArticleDto } from './dto/update-article.dto';
 
 @Controller('articles')
 export class ArticlesController {
-  constructor(private readonly articlesService: ArticlesService) {}
+  constructor(private readonly articlesService: ArticlesService) { }
 
   @Post()
-  create(@Body() createArticleDto: CreateArticleDto) {
-    return this.articlesService.create(createArticleDto);
-  }
+  // create(@Body() createArticleDto: CreateArticleDto) {
+  //   return this.articlesService.create(createArticleDto);
+  // }
 
   @Get()
   findAll() {
@@ -22,13 +22,13 @@ export class ArticlesController {
     return this.articlesService.findOne(+id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateArticleDto: UpdateArticleDto) {
-    return this.articlesService.update(+id, updateArticleDto);
-  }
+  // @Patch(':id')
+  // update(@Param('id') id: string, @Body() updateArticleDto: UpdateArticleDto) {
+  //   return this.articlesService.update(+id, updateArticleDto);
+  // }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.articlesService.remove(+id);
-  }
+  // @Delete(':id')
+  // remove(@Param('id') id: string) {
+  //   return this.articlesService.remove(+id);
+  // }
 }
