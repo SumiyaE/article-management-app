@@ -15,6 +15,4 @@ describe('ArticlesService', () => {
   it('Serviceが定義されていること', () => {
     expect(service).toBeDefined();
   });
-
-  it('findAllで記事の一覧が取得できること')
 });
