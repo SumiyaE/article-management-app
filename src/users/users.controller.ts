@@ -3,8 +3,8 @@ import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Paginate } from 'nestjs-paginate';
 import type { PaginateQuery } from 'nestjs-paginate';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { CreateUserDto } from './dto/request/request-create-user.dto';
+import { UpdateUserDto } from './dto/request/request-update-user.dto';
 
 @ApiTags('Users')
 @Controller('users')

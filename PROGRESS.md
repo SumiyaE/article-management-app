@@ -22,7 +22,6 @@
 ---
 
 ## 完了した作業
-
 ### OpenAPI（API設計書）の学習
 - [x] OpenAPIの基本構造を理解
 - [x] paths, components/schemas, $ref の使い方を理解
@@ -91,13 +90,11 @@
   - ArticlesServiceをRepositoryパターンに変更
 
 - [x] DBにアクセスして、DBから記事の一覧を取得するAPIの作成
-
 - [x] 初期データ投入用マイグレーション作成
-  - `npx ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:run -d src/data-source.ts`
+  - `npx ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:run -d src/data-source.ts
 
 ---
 
-## 課題要件に沿ったAPI仕様書の作成のためのタスクの分解
 ### 記事に表示するのに必要なデータを全てDBのカラムに追加
 - [x] userテーブルの作成 (id, name, thumbnail_image, created_at, updated_at)
 - [x] articlesテーブルにカラムを追加（userid, status, created_at, updated_at）
@@ -106,9 +103,14 @@
 - [x] ID指定でarticleを編集するAPIを作成
 - [x] ID指定でarticleを削除するAPIを作成
 
-## 記事一覧でのソート、フィルター、ーページネーション
+## 記事一覧でのソート、フィルター、ページネーション、検索処理の実装
 - [x] nestjs-paginateのライブラリインストール
 - [x] ページネーションを実装
 - [x] ソート処理を実装
 - [x] フィルター処理を実装
 - [x] 検索処理を実装
+
+## 現在の状態でAPI仕様書を作成
+- [x] nestjsの機能で自動生成する場合、yamlなどに起こすことが可能なのか調査
+- [ ] 現在自動生成されるapi仕様書に定義されている内容を確認し、足りない部分を記録
+- [ ] articles関連のAPIで足りていない部分を補う構文を追加

@@ -3,14 +3,26 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, UpdateResult, DeleteResult } from 'typeorm';
 import { paginate, Paginated, PaginateQuery, PaginateConfig, FilterOperator } from 'nestjs-paginate';
 import { User } from './entities/user.entity';
-import { CreateUserDto } from './dto/create-user.dto';
+import { CreateUserDto } from './dto/request/request-create-user.dto';
 
+// findAllの ページネーション, ソート, 検索, フィルター 設定
 export const USER_PAGINATION_CONFIG: PaginateConfig<User> = {
-  sortableColumns: ['id', 'name', 'updatedAt'], // ソート可能なカラム
-  defaultSortBy: [['createdAt', 'DESC']], // デフォルトのソート設定
-  searchableColumns: ['name'], // 検索可能なカラム
+  // ページネーション設定
+  defaultLimit: 20, // デフォルトの取得件数
+  maxLimit: 100, // 最大取得件数
+
+  // ソート設定
+  sortableColumns: ['id', 'name', 'updatedAt'],
+  defaultSortBy: [['createdAt', 'DESC']],
+
+  // 検索設定
+  searchableColumns: ['name'],
+
+  // リレーション
   relations: ['organization'],
-  filterableColumns: { // フィルター可能なカラム (equal, in のフィルターを設定)
+
+  // フィルター設定
+  filterableColumns: {
     'organization.id': [FilterOperator.EQ, FilterOperator.IN],
   },
 };

@@ -3,15 +3,22 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, UpdateResult, DeleteResult } from 'typeorm';
 import { paginate, Paginated, PaginateQuery, PaginateConfig, FilterOperator } from 'nestjs-paginate';
 import { Article } from './entities/article.entity';
-import { CreateArticleDto } from './dto/create-article.dto';
+import { CreateArticleDto } from './dto/request/request-create-article.dto';
 
-// findAllの ページネーション,　ソート, 検索, フィルター 設定
+// findAllの ページネーション, ソート, 検索, フィルター 設定
 export const ARTICLE_PAGINATION_CONFIG: PaginateConfig<Article> = {
-  sortableColumns: ['id', 'title', 'status', 'updatedAt'], // ソート可能なカラム
-  defaultSortBy: [['updatedAt', 'DESC']], // デフォルトのソート設定
-  searchableColumns: ['title', 'content'], // 検索可能なカラム
+  // ページネーション設定
+  defaultLimit: 20, // デフォルトの取得件数
+  maxLimit: 100, // 最大取得件数
+  // ソート設定
+  sortableColumns: ['id', 'title', 'status', 'updatedAt'],
+  defaultSortBy: [['updatedAt', 'DESC']],
+  // 検索設定
+  searchableColumns: ['title', 'content'],
+  // リレーション
   relations: ['user', 'user.organization'],
-  filterableColumns: { // フィルター可能なカラム (equal, in のフィルターを設定)
+  // フィルター設定
+  filterableColumns: {
     status: [FilterOperator.EQ, FilterOperator.IN],
     'user.id': [FilterOperator.EQ, FilterOperator.IN],
     'user.organization.id': [FilterOperator.EQ, FilterOperator.IN],

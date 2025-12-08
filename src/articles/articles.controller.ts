@@ -1,10 +1,11 @@
 import { Controller, Get, Post, Body, Patch, Delete, Param, ParseIntPipe, NotFoundException, BadRequestException } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiQuery, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { Paginate } from 'nestjs-paginate';
 import type { PaginateQuery } from 'nestjs-paginate';
 import { ArticlesService } from './articles.service';
-import { CreateArticleDto } from './dto/create-article.dto';
-import { UpdateArticleDto } from './dto/update-article.dto';
+import { CreateArticleDto } from './dto/request/request-create-article.dto';
+import { UpdateArticleDto } from './dto/request/request-update-article.dto';
+import { ArticleResponseDto } from './dto/response/response-article.dto';
 
 @ApiTags('Articles')
 @Controller('articles')
@@ -19,6 +20,15 @@ export class ArticlesController {
 
   @Get()
   @ApiOperation({ summary: '記事一覧を取得' })
+  @ApiQuery({ name: 'filter.user.organization.id', required: true, type: Number, description: '組織ID（必須）', example: 1 })
+  @ApiQuery({ name: 'filter.status', required: false, enum: ['draft', 'published'], description: 'ステータスで絞り込み' })
+  @ApiQuery({ name: 'filter.user.id', required: false, type: Number, description: 'ユーザーIDで絞り込み', example: 1 })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'ページ番号（デフォルト: 1）', example: 1 })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: '取得件数（デフォルト: 20、最大: 100）', example: 20 })
+  @ApiQuery({ name: 'sortBy', required: false, description: 'ソート順（例: updatedAt:DESC）', example: 'updatedAt:DESC' })
+  @ApiQuery({ name: 'search', required: false, description: '検索キーワード（title, content を検索）' })
+  @ApiResponse({ status: 200, description: '成功' })
+  @ApiResponse({ status: 400, description: 'filter.user.organization.id is required' })
   findAll(@Paginate() query: PaginateQuery) {
     if (!query.filter?.['user.organization.id']) {
       throw new BadRequestException('filter.user.organization.id is required');
@@ -28,6 +38,9 @@ export class ArticlesController {
 
   @Get(':id')
   @ApiOperation({ summary: '記事を取得' })
+  @ApiParam({ name: 'id', type: Number, description: '記事ID', example: 1 })
+  @ApiResponse({ status: 200, description: '成功', type: ArticleResponseDto })
+  @ApiResponse({ status: 404, description: '記事が見つからない' })
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const article = await this.articlesService.findOne(id);
     if (!article) {
