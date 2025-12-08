@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, UpdateResult, DeleteResult } from 'typeorm';
-import { paginate, Paginated, PaginateQuery, PaginateConfig, FilterOperator } from 'nestjs-paginate';
+import { paginate, PaginateQuery, PaginateConfig, FilterOperator } from 'nestjs-paginate';
 import { ArticleEntity } from './entities/article.entity';
 import { RequestCreateArticleDto } from './dto/request/request-create-article.dto';
+import { ResponseArticleDto } from './dto/response/response-article.dto';
+import { ResponsePaginatedArticleDto } from './dto/response/response-paginated-article.dto';
 
 // findAllの ページネーション, ソート, 検索, フィルター 設定
 export const ARTICLE_PAGINATION_CONFIG: PaginateConfig<ArticleEntity> = {
@@ -32,15 +34,15 @@ export class ArticlesService {
     private articlesRepository: Repository<ArticleEntity>,
   ) { }
 
-  findAll(query: PaginateQuery): Promise<Paginated<ArticleEntity>> {
+  findAll(query: PaginateQuery): Promise<ResponsePaginatedArticleDto> {
     return paginate(query, this.articlesRepository, ARTICLE_PAGINATION_CONFIG);
   }
 
-  findOne(id: number): Promise<ArticleEntity | null> {
+  findOne(id: number): Promise<ResponseArticleDto | null> {
     return this.articlesRepository.findOneBy({ id });
   }
 
-  create(createArticleDto: RequestCreateArticleDto): Promise<ArticleEntity> {
+  create(createArticleDto: RequestCreateArticleDto): Promise<ResponseArticleDto> {
     return this.articlesRepository.save(createArticleDto);
   }
 
@@ -49,6 +51,6 @@ export class ArticlesService {
   }
 
   remove(id: number): Promise<DeleteResult> {
-    return this.articlesRepository.delete(id)
+    return this.articlesRepository.delete(id);
   }
 }

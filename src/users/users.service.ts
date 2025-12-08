@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, UpdateResult, DeleteResult } from 'typeorm';
-import { paginate, Paginated, PaginateQuery, PaginateConfig, FilterOperator } from 'nestjs-paginate';
+import { paginate, PaginateQuery, PaginateConfig, FilterOperator } from 'nestjs-paginate';
 import { UserEntity } from './entities/user.entity';
 import { RequestCreateUserDto } from './dto/request/request-create-user.dto';
+import { ResponseUserDto } from './dto/response/response-user.dto';
+import { ResponsePaginatedUserDto } from './dto/response/response-paginated-user.dto';
 
 // findAllの ページネーション, ソート, 検索, フィルター 設定
 export const USER_PAGINATION_CONFIG: PaginateConfig<UserEntity> = {
@@ -34,15 +36,15 @@ export class UsersService {
     private usersRepository: Repository<UserEntity>,
   ) { }
 
-  findAll(query: PaginateQuery): Promise<Paginated<UserEntity>> {
+  findAll(query: PaginateQuery): Promise<ResponsePaginatedUserDto> {
     return paginate(query, this.usersRepository, USER_PAGINATION_CONFIG);
   }
 
-  findOne(id: number): Promise<UserEntity | null> {
+  findOne(id: number): Promise<ResponseUserDto | null> {
     return this.usersRepository.findOneBy({ id });
   }
 
-  create(createUserDto: RequestCreateUserDto): Promise<UserEntity> {
+  create(createUserDto: RequestCreateUserDto): Promise<ResponseUserDto> {
     return this.usersRepository.save(createUserDto);
   }
 
