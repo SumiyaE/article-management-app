@@ -7,11 +7,11 @@ import { CreateArticleDto } from './dto/create-article.dto';
 
 // findAllの ページネーション,　ソート, 検索, フィルター 設定
 export const ARTICLE_PAGINATION_CONFIG: PaginateConfig<Article> = {
-  sortableColumns: ['id', 'title', 'status', 'createdAt', 'updatedAt'],
-  defaultSortBy: [['createdAt', 'DESC']],
-  searchableColumns: ['title', 'content'],
+  sortableColumns: ['id', 'title', 'status', 'updatedAt'], // ソート可能なカラム
+  defaultSortBy: [['updatedAt', 'DESC']], // デフォルトのソート設定
+  searchableColumns: ['title', 'content'], // 検索可能なカラム
   relations: ['user', 'user.organization'],
-  filterableColumns: {
+  filterableColumns: { // フィルター可能なカラム (equal, in のフィルターを設定)
     status: [FilterOperator.EQ, FilterOperator.IN],
     'user.id': [FilterOperator.EQ, FilterOperator.IN],
     'user.organization.id': [FilterOperator.EQ, FilterOperator.IN],

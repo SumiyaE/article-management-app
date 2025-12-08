@@ -6,11 +6,11 @@ import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 
 export const USER_PAGINATION_CONFIG: PaginateConfig<User> = {
-  sortableColumns: ['id', 'name', 'createdAt', 'updatedAt'],
-  defaultSortBy: [['createdAt', 'DESC']],
-  searchableColumns: ['name'],
+  sortableColumns: ['id', 'name', 'updatedAt'], // ソート可能なカラム
+  defaultSortBy: [['createdAt', 'DESC']], // デフォルトのソート設定
+  searchableColumns: ['name'], // 検索可能なカラム
   relations: ['organization'],
-  filterableColumns: {
+  filterableColumns: { // フィルター可能なカラム (equal, in のフィルターを設定)
     'organization.id': [FilterOperator.EQ, FilterOperator.IN],
   },
 };
