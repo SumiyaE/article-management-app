@@ -1,5 +1,4 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { PaginateQuery } from 'nestjs-paginate';
 import { paginate } from 'nestjs-paginate';
@@ -153,10 +152,12 @@ describe('ArticlesService', () => {
       expect(mockRepository.findOneBy).toHaveBeenCalledWith({ id: 1 });
     });
 
-    it('存在しないIDの場合はNotFoundExceptionを投げる', async () => {
+    it('存在しないIDの場合はnullを返す', async () => {
       mockRepository.findOneBy.mockResolvedValue(null);
 
-      await expect(service.findOne(999)).rejects.toThrow(NotFoundException);
+      const result = await service.findOne(999);
+
+      expect(result).toBeNull();
     });
   });
 

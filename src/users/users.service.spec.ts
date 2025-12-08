@@ -1,8 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { PaginateQuery } from 'nestjs-paginate';
+import { paginate } from 'nestjs-paginate';
 import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
 import { Organization } from '../organizations/entities/organization.entity';
+
+// nestjs-paginate のモック
+jest.mock('nestjs-paginate', () => ({
+  ...jest.requireActual('nestjs-paginate'),
+  paginate: jest.fn(),
+}));
 
 // ============================================
 // ファクトリ関数
@@ -66,26 +74,53 @@ describe('UsersService', () => {
   // findAll
   // ============================================
   describe('findAll', () => {
-    it('ユーザーの一覧を返す', async () => {
+    const mockQuery: PaginateQuery = { path: '/users' };
+
+    it('ページネーション付きでユーザーの一覧を返す', async () => {
       const mockUsers = [
         createMockUser({ id: 1, name: 'ユーザー1' }),
         createMockUser({ id: 2, name: 'ユーザー2' }),
       ];
-      mockRepository.find.mockResolvedValue(mockUsers);
+      const mockPaginatedResult = {
+        data: mockUsers,
+        meta: {
+          itemsPerPage: 20,
+          totalItems: 2,
+          currentPage: 1,
+          totalPages: 1,
+        },
+        links: {
+          current: '/users?page=1',
+        },
+      };
+      (paginate as jest.Mock).mockResolvedValue(mockPaginatedResult);
 
-      const result = await service.findAll();
+      const result = await service.findAll(mockQuery);
 
-      expect(result).toHaveLength(2);
-      expect(result).toEqual(mockUsers);
-      expect(mockRepository.find).toHaveBeenCalledTimes(1);
+      expect(result.data).toHaveLength(2);
+      expect(result.meta.totalItems).toBe(2);
+      expect(paginate).toHaveBeenCalled();
     });
 
-    it('ユーザーがいない場合は空配列を返す', async () => {
-      mockRepository.find.mockResolvedValue([]);
+    it('ユーザーがいない場合は空のデータを返す', async () => {
+      const mockPaginatedResult = {
+        data: [],
+        meta: {
+          itemsPerPage: 20,
+          totalItems: 0,
+          currentPage: 1,
+          totalPages: 0,
+        },
+        links: {
+          current: '/users?page=1',
+        },
+      };
+      (paginate as jest.Mock).mockResolvedValue(mockPaginatedResult);
 
-      const result = await service.findAll();
+      const result = await service.findAll(mockQuery);
 
-      expect(result).toEqual([]);
+      expect(result.data).toEqual([]);
+      expect(result.meta.totalItems).toBe(0);
     });
   });
 

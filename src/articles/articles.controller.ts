@@ -1,15 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Delete, Param } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiExtraModels } from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Patch, Delete, Param, ParseIntPipe, NotFoundException, BadRequestException } from '@nestjs/common';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Paginate } from 'nestjs-paginate';
 import type { PaginateQuery } from 'nestjs-paginate';
-import { ArticlesService, ARTICLE_PAGINATION_CONFIG } from './articles.service';
+import { ArticlesService } from './articles.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
-import { ArticleDto } from './dto/article.dto';
-import { ApiPaginatedResponse } from '../common/decorators/api-paginated.decorator';
 
 @ApiTags('Articles')
-@ApiExtraModels(ArticleDto)
 @Controller('articles')
 export class ArticlesController {
   constructor(private readonly articlesService: ArticlesService) { }
@@ -22,15 +19,21 @@ export class ArticlesController {
 
   @Get()
   @ApiOperation({ summary: '記事一覧を取得' })
-  @ApiPaginatedResponse(ArticleDto, ARTICLE_PAGINATION_CONFIG)
   findAll(@Paginate() query: PaginateQuery) {
+    if (!query.filter?.['user.organization.id']) {
+      throw new BadRequestException('filter.user.organization.id is required');
+    }
     return this.articlesService.findAll(query);
   }
 
   @Get(':id')
   @ApiOperation({ summary: '記事を取得' })
-  findOne(@Param('id') id: string) {
-    return this.articlesService.findOne(+id);
+  async findOne(@Param('id', ParseIntPipe) id: number) {
+    const article = await this.articlesService.findOne(id);
+    if (!article) {
+      throw new NotFoundException(`Article #${id} not found`);
+    }
+    return article;
   }
 
   @Patch(':id')

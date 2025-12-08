@@ -1,10 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, UpdateResult, DeleteResult } from 'typeorm';
 import { paginate, Paginated, PaginateQuery, PaginateConfig, FilterOperator } from 'nestjs-paginate';
 import { Article } from './entities/article.entity';
 import { CreateArticleDto } from './dto/create-article.dto';
 
+// findAllの ページネーション,　ソート, 検索, フィルター 設定
 export const ARTICLE_PAGINATION_CONFIG: PaginateConfig<Article> = {
   sortableColumns: ['id', 'title', 'status', 'createdAt', 'updatedAt'],
   defaultSortBy: [['createdAt', 'DESC']],
@@ -28,12 +29,8 @@ export class ArticlesService {
     return paginate(query, this.articlesRepository, ARTICLE_PAGINATION_CONFIG);
   }
 
-  async findOne(id: number): Promise<Article> {
-    const article = await this.articlesRepository.findOneBy({ id });
-    if (!article) {
-      throw new NotFoundException(`Article #${id} not found`);
-    }
-    return article;
+  findOne(id: number): Promise<Article | null> {
+    return this.articlesRepository.findOneBy({ id });
   }
 
   create(createArticleDto: CreateArticleDto): Promise<Article> {
