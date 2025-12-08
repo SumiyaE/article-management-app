@@ -1,11 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, UpdateResult, DeleteResult } from 'typeorm';
+import { Repository } from 'typeorm';
 import { paginate, PaginateQuery, PaginateConfig, FilterOperator } from 'nestjs-paginate';
 import { UserEntity } from './entities/user.entity';
 import { RequestCreateUserDto } from './dto/request/request-create-user.dto';
 import { ResponseUserDto } from './dto/response/response-user.dto';
 import { ResponsePaginatedUserDto } from './dto/response/response-paginated-user.dto';
+import { ResponseUpdateResultDto } from '../common/dto/response/response-update-result.dto';
+import { ResponseDeleteResultDto } from '../common/dto/response/response-delete-result.dto';
 
 // findAllの ページネーション, ソート, 検索, フィルター 設定
 export const USER_PAGINATION_CONFIG: PaginateConfig<UserEntity> = {
@@ -14,7 +16,7 @@ export const USER_PAGINATION_CONFIG: PaginateConfig<UserEntity> = {
   maxLimit: 100, // 最大取得件数
 
   // ソート設定
-  sortableColumns: ['id', 'name', 'updatedAt'],
+  sortableColumns: ['name', 'updatedAt'],
   defaultSortBy: [['createdAt', 'DESC']],
 
   // 検索設定
@@ -48,11 +50,11 @@ export class UsersService {
     return this.usersRepository.save(createUserDto);
   }
 
-  update(id: number, updateUserDto: Partial<RequestCreateUserDto>): Promise<UpdateResult> {
+  update(id: number, updateUserDto: Partial<RequestCreateUserDto>): Promise<ResponseUpdateResultDto> {
     return this.usersRepository.update(id, updateUserDto);
   }
 
-  remove(id: number): Promise<DeleteResult> {
+  remove(id: number): Promise<ResponseDeleteResultDto> {
     return this.usersRepository.delete(id);
   }
 }

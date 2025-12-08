@@ -6,6 +6,9 @@ import { ArticlesService } from './articles.service';
 import { RequestCreateArticleDto } from './dto/request/request-create-article.dto';
 import { RequestUpdateArticleDto } from './dto/request/request-update-article.dto';
 import { ResponseArticleDto } from './dto/response/response-article.dto';
+import { ResponsePaginatedArticleDto } from './dto/response/response-paginated-article.dto';
+import { ResponseUpdateResultDto } from '../common/dto/response/response-update-result.dto';
+import { ResponseDeleteResultDto } from '../common/dto/response/response-delete-result.dto';
 
 @ApiTags('Articles')
 @Controller('articles')
@@ -14,6 +17,7 @@ export class ArticlesController {
 
   @Post()
   @ApiOperation({ summary: '記事を作成' })
+  @ApiResponse({ status: 201, description: '作成成功', type: ResponseArticleDto })
   create(@Body() createArticleDto: RequestCreateArticleDto) {
     return this.articlesService.create(createArticleDto);
   }
@@ -25,9 +29,9 @@ export class ArticlesController {
   @ApiQuery({ name: 'filter.user.id', required: false, type: Number, description: 'ユーザーIDで絞り込み', example: 1 })
   @ApiQuery({ name: 'page', required: false, type: Number, description: 'ページ番号（デフォルト: 1）', example: 1 })
   @ApiQuery({ name: 'limit', required: false, type: Number, description: '取得件数（デフォルト: 20、最大: 100）', example: 20 })
-  @ApiQuery({ name: 'sortBy', required: false, description: 'ソート順（例: updatedAt:DESC）', example: 'updatedAt:DESC' })
+  @ApiQuery({ name: 'sortBy', required: false, enum: ['title:ASC', 'title:DESC', 'status:ASC', 'status:DESC', 'updatedAt:ASC', 'updatedAt:DESC'], description: 'ソート順' })
   @ApiQuery({ name: 'search', required: false, description: '検索キーワード（title, content を検索）' })
-  @ApiResponse({ status: 200, description: '成功' })
+  @ApiResponse({ status: 200, description: '成功', type: ResponsePaginatedArticleDto })
   @ApiResponse({ status: 400, description: 'filter.user.organization.id is required' })
   findAll(@Paginate() query: PaginateQuery) {
     if (!query.filter?.['user.organization.id']) {
@@ -51,13 +55,19 @@ export class ArticlesController {
 
   @Patch(':id')
   @ApiOperation({ summary: '記事を更新' })
-  update(@Param('id') id: string, @Body() updateArticleDto: RequestUpdateArticleDto) {
-    return this.articlesService.update(+id, updateArticleDto);
+  @ApiParam({ name: 'id', type: Number, description: '記事ID', example: 1 })
+  @ApiResponse({ status: 200, description: '更新成功', type: ResponseUpdateResultDto })
+  @ApiResponse({ status: 404, description: '記事が見つからない' })
+  update(@Param('id', ParseIntPipe) id: number, @Body() updateArticleDto: RequestUpdateArticleDto) {
+    return this.articlesService.update(id, updateArticleDto);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: '記事を削除' })
-  remove(@Param('id') id: string) {
-    return this.articlesService.remove(+id);
+  @ApiParam({ name: 'id', type: Number, description: '記事ID', example: 1 })
+  @ApiResponse({ status: 200, description: '削除成功', type: ResponseDeleteResultDto })
+  @ApiResponse({ status: 404, description: '記事が見つからない' })
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.articlesService.remove(id);
   }
 }

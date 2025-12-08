@@ -1,11 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, UpdateResult, DeleteResult } from 'typeorm';
+import { Repository } from 'typeorm';
 import { paginate, PaginateQuery, PaginateConfig, FilterOperator } from 'nestjs-paginate';
 import { ArticleEntity } from './entities/article.entity';
 import { RequestCreateArticleDto } from './dto/request/request-create-article.dto';
 import { ResponseArticleDto } from './dto/response/response-article.dto';
 import { ResponsePaginatedArticleDto } from './dto/response/response-paginated-article.dto';
+import { ResponseUpdateResultDto } from '../common/dto/response/response-update-result.dto';
+import { ResponseDeleteResultDto } from '../common/dto/response/response-delete-result.dto';
 
 // findAllの ページネーション, ソート, 検索, フィルター 設定
 export const ARTICLE_PAGINATION_CONFIG: PaginateConfig<ArticleEntity> = {
@@ -13,7 +15,7 @@ export const ARTICLE_PAGINATION_CONFIG: PaginateConfig<ArticleEntity> = {
   defaultLimit: 20, // デフォルトの取得件数
   maxLimit: 100, // 最大取得件数
   // ソート設定
-  sortableColumns: ['id', 'title', 'status', 'updatedAt'],
+  sortableColumns: ['title', 'status', 'updatedAt'],
   defaultSortBy: [['updatedAt', 'DESC']],
   // 検索設定
   searchableColumns: ['title', 'content'],
@@ -46,11 +48,11 @@ export class ArticlesService {
     return this.articlesRepository.save(createArticleDto);
   }
 
-  update(id: number, updateArticleDto: Partial<RequestCreateArticleDto>): Promise<UpdateResult> {
+  update(id: number, updateArticleDto: Partial<RequestCreateArticleDto>): Promise<ResponseUpdateResultDto> {
     return this.articlesRepository.update(id, updateArticleDto);
   }
 
-  remove(id: number): Promise<DeleteResult> {
+  remove(id: number): Promise<ResponseDeleteResultDto> {
     return this.articlesRepository.delete(id);
   }
 }
