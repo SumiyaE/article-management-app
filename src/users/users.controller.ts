@@ -3,8 +3,8 @@ import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Paginate } from 'nestjs-paginate';
 import type { PaginateQuery } from 'nestjs-paginate';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/request/request-create-user.dto';
-import { UpdateUserDto } from './dto/request/request-update-user.dto';
+import { RequestCreateUserDto } from './dto/request/request-create-user.dto';
+import { RequestUpdateUserDto } from './dto/request/request-update-user.dto';
 
 @ApiTags('Users')
 @Controller('users')
@@ -13,7 +13,7 @@ export class UsersController {
 
   @Post()
   @ApiOperation({ summary: 'ユーザーを作成' })
-  create(@Body() createUserDto: CreateUserDto) {
+  create(@Body() createUserDto: RequestCreateUserDto) {
     return this.usersService.create(createUserDto);
   }
 
@@ -37,7 +37,7 @@ export class UsersController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+  update(@Param('id') id: string, @Body() updateUserDto: RequestUpdateUserDto) {
     return this.usersService.update(+id, updateUserDto);
   }
 

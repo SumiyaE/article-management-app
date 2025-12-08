@@ -7,10 +7,10 @@ import {
     ManyToOne,
     JoinColumn,
 } from 'typeorm';
-import { User } from '../../users/entities/user.entity';
+import { UserEntity } from '../../users/entities/user.entity';
 
 @Entity('articles')
-export class Article {
+export class ArticleEntity {
     @PrimaryGeneratedColumn({ type: 'bigint', unsigned: true })
     id: number;
 
@@ -29,7 +29,7 @@ export class Article {
     @UpdateDateColumn({ name: 'updated_at' })
     updatedAt: Date;
 
-    @ManyToOne(() => User, (user) => user.articles)
+    @ManyToOne(() => UserEntity, (user) => user.articles)
     @JoinColumn({ name: 'user_id' })
-    user: User;
+    user: UserEntity;
 }

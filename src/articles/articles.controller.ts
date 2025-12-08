@@ -3,9 +3,9 @@ import { ApiTags, ApiOperation, ApiQuery, ApiResponse, ApiParam } from '@nestjs/
 import { Paginate } from 'nestjs-paginate';
 import type { PaginateQuery } from 'nestjs-paginate';
 import { ArticlesService } from './articles.service';
-import { CreateArticleDto } from './dto/request/request-create-article.dto';
-import { UpdateArticleDto } from './dto/request/request-update-article.dto';
-import { ArticleResponseDto } from './dto/response/response-article.dto';
+import { RequestCreateArticleDto } from './dto/request/request-create-article.dto';
+import { RequestUpdateArticleDto } from './dto/request/request-update-article.dto';
+import { ResponseArticleDto } from './dto/response/response-article.dto';
 
 @ApiTags('Articles')
 @Controller('articles')
@@ -14,7 +14,7 @@ export class ArticlesController {
 
   @Post()
   @ApiOperation({ summary: '記事を作成' })
-  create(@Body() createArticleDto: CreateArticleDto) {
+  create(@Body() createArticleDto: RequestCreateArticleDto) {
     return this.articlesService.create(createArticleDto);
   }
 
@@ -39,7 +39,7 @@ export class ArticlesController {
   @Get(':id')
   @ApiOperation({ summary: '記事を取得' })
   @ApiParam({ name: 'id', type: Number, description: '記事ID', example: 1 })
-  @ApiResponse({ status: 200, description: '成功', type: ArticleResponseDto })
+  @ApiResponse({ status: 200, description: '成功', type: ResponseArticleDto })
   @ApiResponse({ status: 404, description: '記事が見つからない' })
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const article = await this.articlesService.findOne(id);
@@ -51,7 +51,7 @@ export class ArticlesController {
 
   @Patch(':id')
   @ApiOperation({ summary: '記事を更新' })
-  update(@Param('id') id: string, @Body() updateArticleDto: UpdateArticleDto) {
+  update(@Param('id') id: string, @Body() updateArticleDto: RequestUpdateArticleDto) {
     return this.articlesService.update(+id, updateArticleDto);
   }
 

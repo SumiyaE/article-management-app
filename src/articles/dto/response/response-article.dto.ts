@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { UserResponseDto } from '../../../users/dto/response/response-user.dto';
+import { ResponseUserDto } from '../../../users/dto/response/response-user.dto';
 
-export class ArticleResponseDto {
+export class ResponseArticleDto {
   @ApiProperty({ description: '記事ID', example: 1 })
   id: number;
 
@@ -20,6 +20,6 @@ export class ArticleResponseDto {
   @ApiProperty({ description: '更新日時', example: '2025-01-01T00:00:00.000Z' })
   updatedAt: Date;
 
-  @ApiProperty({ description: '投稿者', type: () => UserResponseDto })
-  user: UserResponseDto;
+  @ApiProperty({ description: '投稿者', type: () => ResponseUserDto })
+  user: ResponseUserDto;
 }

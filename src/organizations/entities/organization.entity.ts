@@ -6,10 +6,10 @@ import {
   UpdateDateColumn,
   OneToMany,
 } from 'typeorm';
-import { User } from '../../users/entities/user.entity';
+import { UserEntity } from '../../users/entities/user.entity';
 
 @Entity('organizations')
-export class Organization {
+export class OrganizationEntity {
   @PrimaryGeneratedColumn({ type: 'bigint', unsigned: true })
   id: number;
 
@@ -28,6 +28,6 @@ export class Organization {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
-  @OneToMany(() => User, (user) => user.organization)
-  users: User[];
+  @OneToMany(() => UserEntity, (user) => user.organization)
+  users: UserEntity[];
 }

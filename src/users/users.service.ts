@@ -2,11 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, UpdateResult, DeleteResult } from 'typeorm';
 import { paginate, Paginated, PaginateQuery, PaginateConfig, FilterOperator } from 'nestjs-paginate';
-import { User } from './entities/user.entity';
-import { CreateUserDto } from './dto/request/request-create-user.dto';
+import { UserEntity } from './entities/user.entity';
+import { RequestCreateUserDto } from './dto/request/request-create-user.dto';
 
 // findAllの ページネーション, ソート, 検索, フィルター 設定
-export const USER_PAGINATION_CONFIG: PaginateConfig<User> = {
+export const USER_PAGINATION_CONFIG: PaginateConfig<UserEntity> = {
   // ページネーション設定
   defaultLimit: 20, // デフォルトの取得件数
   maxLimit: 100, // 最大取得件数
@@ -30,23 +30,23 @@ export const USER_PAGINATION_CONFIG: PaginateConfig<User> = {
 @Injectable()
 export class UsersService {
   constructor(
-    @InjectRepository(User)
-    private usersRepository: Repository<User>,
+    @InjectRepository(UserEntity)
+    private usersRepository: Repository<UserEntity>,
   ) { }
 
-  findAll(query: PaginateQuery): Promise<Paginated<User>> {
+  findAll(query: PaginateQuery): Promise<Paginated<UserEntity>> {
     return paginate(query, this.usersRepository, USER_PAGINATION_CONFIG);
   }
 
-  findOne(id: number): Promise<User | null> {
+  findOne(id: number): Promise<UserEntity | null> {
     return this.usersRepository.findOneBy({ id });
   }
 
-  create(createUserDto: CreateUserDto): Promise<User> {
+  create(createUserDto: RequestCreateUserDto): Promise<UserEntity> {
     return this.usersRepository.save(createUserDto);
   }
 
-  update(id: number, updateUserDto: Partial<CreateUserDto>): Promise<UpdateResult> {
+  update(id: number, updateUserDto: Partial<RequestCreateUserDto>): Promise<UpdateResult> {
     return this.usersRepository.update(id, updateUserDto);
   }
 

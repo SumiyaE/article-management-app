@@ -8,11 +8,11 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { Article } from '../../articles/entities/article.entity';
-import { Organization } from '../../organizations/entities/organization.entity';
+import { ArticleEntity } from '../../articles/entities/article.entity';
+import { OrganizationEntity } from '../../organizations/entities/organization.entity';
 
 @Entity('users')
-export class User {
+export class UserEntity {
   @PrimaryGeneratedColumn({ type: 'bigint', unsigned: true })
   id: number;
 
@@ -28,10 +28,10 @@ export class User {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
-  @OneToMany(() => Article, (article) => article.user)
-  articles: Article[];
+  @OneToMany(() => ArticleEntity, (article) => article.user)
+  articles: ArticleEntity[];
 
-  @ManyToOne(() => Organization, (organization) => organization.users)
+  @ManyToOne(() => OrganizationEntity, (organization) => organization.users)
   @JoinColumn({ name: 'organization_id' })
-  organization: Organization;
+  organization: OrganizationEntity;
 }

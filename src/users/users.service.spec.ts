@@ -3,8 +3,8 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { PaginateQuery } from 'nestjs-paginate';
 import { paginate } from 'nestjs-paginate';
 import { UsersService } from './users.service';
-import { User } from './entities/user.entity';
-import { Organization } from '../organizations/entities/organization.entity';
+import { UserEntity } from './entities/user.entity';
+import { OrganizationEntity } from '../organizations/entities/organization.entity';
 
 // nestjs-paginate のモック
 jest.mock('nestjs-paginate', () => ({
@@ -15,7 +15,7 @@ jest.mock('nestjs-paginate', () => ({
 // ============================================
 // ファクトリ関数
 // ============================================
-const createMockOrganization = (overrides?: Partial<Organization>): Organization => ({
+const createMockOrganization = (overrides?: Partial<OrganizationEntity>): OrganizationEntity => ({
   id: 1,
   name: 'テスト組織',
   slug: 'test-org',
@@ -26,7 +26,7 @@ const createMockOrganization = (overrides?: Partial<Organization>): Organization
   ...overrides,
 });
 
-const createMockUser = (overrides?: Partial<User>): User => ({
+const createMockUser = (overrides?: Partial<UserEntity>): UserEntity => ({
   id: 1,
   name: 'テストユーザー',
   thumbnailImage: null,
@@ -57,7 +57,7 @@ describe('UsersService', () => {
       providers: [
         UsersService,
         {
-          provide: getRepositoryToken(User),
+          provide: getRepositoryToken(UserEntity),
           useValue: mockRepository,
         },
       ],
