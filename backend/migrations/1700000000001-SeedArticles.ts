@@ -20,7 +20,15 @@ export class SeedArticles1700000000001 implements MigrationInterface {
 
         // 記事を作成（user_idを紐付け）
         await queryRunner.query(`
-            INSERT INTO articles (title, content, status, user_id) VALUES
+            INSERT INTO articles (user_id) VALUES
+            (1),
+            (2),
+            (3)
+        `);
+
+        // 記事コンテンツを作成（article_idを紐付け）
+        await queryRunner.query(`
+            INSERT INTO article_contents (title, content, status, article_id) VALUES
             ('最初の投稿', 'これは初めての投稿です。', 'published', 1),
             ('二つ目の投稿', 'これは二つ目の投稿です', 'draft', 2),
             ('サンプル記事', 'サンプル組織の記事です', 'published', 3)
@@ -29,7 +37,10 @@ export class SeedArticles1700000000001 implements MigrationInterface {
 
     public async down(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`
-            DELETE FROM articles WHERE title IN ('最初の投稿', '二つ目の投稿', 'サンプル記事')
+            DELETE FROM article_contents WHERE title IN ('最初の投稿', '二つ目の投稿', 'サンプル記事')
+        `);
+        await queryRunner.query(`
+            DELETE FROM articles WHERE id IN (1, 2, 3)
         `);
         await queryRunner.query(`
             DELETE FROM users WHERE name IN ('テストユーザー1', 'テストユーザー2', 'サンプルユーザー')

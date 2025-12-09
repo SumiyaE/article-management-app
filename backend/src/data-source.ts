@@ -1,5 +1,6 @@
 import { DataSource } from 'typeorm';
 import { ArticleEntity } from './articles/entities/article.entity';
+import { ArticleContentEntity } from './articles/entities/article-content.entity';
 import { UserEntity } from './users/entities/user.entity';
 import { OrganizationEntity } from './organizations/entities/organization.entity';
 
@@ -10,6 +11,6 @@ export default new DataSource({
   username: process.env.DB_USERNAME || 'root',
   password: process.env.DB_PASSWORD || 'root',
   database: process.env.DB_DATABASE || 'articles_db',
-  entities: [ArticleEntity, UserEntity, OrganizationEntity],
+  entities: [ArticleEntity, ArticleContentEntity, UserEntity, OrganizationEntity],
   migrations: ['migrations/*.ts'],
 });
