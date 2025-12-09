@@ -5,10 +5,12 @@ import {
   UpdateDateColumn,
   ManyToOne,
   OneToOne,
+  OneToMany,
   JoinColumn,
 } from 'typeorm';
 import { UserEntity } from '../../users/entities/user.entity';
-import { ArticleContentEntity } from './article-content.entity';
+import { ArticleContentDraftEntity } from './article-content-draft.entity';
+import { ArticleContentPublishedEntity } from './article-content-published.entity';
 
 @Entity('articles')
 export class ArticleEntity {
@@ -25,6 +27,9 @@ export class ArticleEntity {
   @JoinColumn({ name: 'user_id' })
   user: UserEntity;
 
-  @OneToOne(() => ArticleContentEntity, (articleContent) => articleContent.article, { cascade: true })
-  articleContent: ArticleContentEntity;
+  @OneToOne(() => ArticleContentDraftEntity, (contentDraft) => contentDraft.article, { cascade: true })
+  contentDraft: ArticleContentDraftEntity;
+
+  @OneToMany(() => ArticleContentPublishedEntity, (contentPublished) => contentPublished.article, { cascade: true })
+  contentPublishedVersions: ArticleContentPublishedEntity[];
 }

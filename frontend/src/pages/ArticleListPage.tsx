@@ -6,7 +6,7 @@ import ArticleCard from '../components/ArticleCard';
 import Pagination from '../components/Pagination';
 import Modal from '../components/Modal';
 import ArticleForm from '../components/ArticleForm';
-import type { ArticleStatus, ArticleQueryParams } from '../types';
+import type { ArticleQueryParams } from '../types';
 
 const ORGANIZATION_ID = 1; // デモ用固定値
 
@@ -18,20 +18,13 @@ type SortOption = {
 const SORT_OPTIONS: SortOption[] = [
   { label: '更新日時（新しい順）', value: 'updatedAt:DESC' },
   { label: '更新日時（古い順）', value: 'updatedAt:ASC' },
-  { label: 'タイトル（A→Z）', value: 'title:ASC' },
-  { label: 'タイトル（Z→A）', value: 'title:DESC' },
-];
-
-const STATUS_OPTIONS = [
-  { label: 'すべて', value: '' },
-  { label: '公開のみ', value: 'published' },
-  { label: '下書きのみ', value: 'draft' },
+  { label: 'タイトル（A→Z）', value: 'contentDraft.title:ASC' },
+  { label: 'タイトル（Z→A）', value: 'contentDraft.title:DESC' },
 ];
 
 export default function ArticleListPage() {
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState<ArticleQueryParams['sortBy']>('updatedAt:DESC');
-  const [statusFilter, setStatusFilter] = useState<ArticleStatus | ''>('');
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -43,14 +36,11 @@ export default function ArticleListPage() {
       limit: 12,
       sortBy,
     };
-    if (statusFilter) {
-      params['filter.status'] = statusFilter;
-    }
     if (search) {
       params.search = search;
     }
     return params;
-  }, [page, sortBy, statusFilter, search]);
+  }, [page, sortBy, search]);
 
   const { data, isLoading, error } = useArticles(queryParams);
   const { data: usersData } = useUsers(ORGANIZATION_ID);
@@ -65,7 +55,6 @@ export default function ArticleListPage() {
   const handleCreateArticle = async (formData: {
     title: string;
     content: string;
-    status: ArticleStatus;
     userId: number;
   }) => {
     await createArticleMutation.mutateAsync(formData);
@@ -119,24 +108,6 @@ export default function ArticleListPage() {
               </div>
             </form>
 
-            {/* ステータスフィルター */}
-            <div className="w-full lg:w-48">
-              <select
-                value={statusFilter}
-                onChange={(e) => {
-                  setStatusFilter(e.target.value as ArticleStatus | '');
-                  setPage(1);
-                }}
-                className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              >
-                {STATUS_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
             {/* ソート */}
             <div className="w-full lg:w-56">
               <select
@@ -157,37 +128,22 @@ export default function ArticleListPage() {
           </div>
 
           {/* アクティブフィルター表示 */}
-          {(search || statusFilter) && (
+          {search && (
             <div className="mt-3 flex flex-wrap gap-2">
-              {search && (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                  検索: {search}
-                  <button
-                    onClick={() => {
-                      setSearch('');
-                      setSearchInput('');
-                    }}
-                    className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-blue-200"
-                  >
-                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
-                  </button>
-                </span>
-              )}
-              {statusFilter && (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                  {statusFilter === 'published' ? '公開' : '下書き'}
-                  <button
-                    onClick={() => setStatusFilter('')}
-                    className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-gray-200"
-                  >
-                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
-                  </button>
-                </span>
-              )}
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                検索: {search}
+                <button
+                  onClick={() => {
+                    setSearch('');
+                    setSearchInput('');
+                  }}
+                  className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-blue-200"
+                >
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </span>
             </div>
           )}
         </div>

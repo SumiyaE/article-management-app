@@ -9,8 +9,8 @@ import {
 } from 'typeorm';
 import { ArticleEntity } from './article.entity';
 
-@Entity('article_contents')
-export class ArticleContentEntity {
+@Entity('article_content_drafts')
+export class ArticleContentDraftEntity {
   @PrimaryGeneratedColumn({ type: 'bigint', unsigned: true })
   id: number;
 
@@ -20,16 +20,13 @@ export class ArticleContentEntity {
   @Column({ type: 'text' })
   content: string = '';
 
-  @Column({ type: 'enum', enum: ['draft', 'published'], default: 'draft' })
-  status: 'draft' | 'published';
-
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
-  @OneToOne(() => ArticleEntity, (article) => article.articleContent)
+  @OneToOne(() => ArticleEntity, (article) => article.contentDraft)
   @JoinColumn({ name: 'article_id' })
   article: ArticleEntity;
 }

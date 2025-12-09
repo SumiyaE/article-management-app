@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import type { Article, ArticleStatus, User } from '../types';
+import type { Article, User } from '../types';
 
 interface ArticleFormProps {
   article?: Article;
@@ -7,7 +7,6 @@ interface ArticleFormProps {
   onSubmit: (data: {
     title: string;
     content: string;
-    status: ArticleStatus;
     userId: number;
   }) => void;
   onCancel: () => void;
@@ -21,23 +20,21 @@ export default function ArticleForm({
   onCancel,
   isLoading = false,
 }: ArticleFormProps) {
-  const [title, setTitle] = useState(article?.title || '');
-  const [content, setContent] = useState(article?.content || '');
-  const [status, setStatus] = useState<ArticleStatus>(article?.status || 'draft');
+  const [title, setTitle] = useState(article?.contentDraft.title || '');
+  const [content, setContent] = useState(article?.contentDraft.content || '');
   const [userId, setUserId] = useState<number>(article?.user.id || users[0]?.id || 0);
 
   useEffect(() => {
     if (article) {
-      setTitle(article.title);
-      setContent(article.content);
-      setStatus(article.status);
+      setTitle(article.contentDraft.title);
+      setContent(article.contentDraft.content);
       setUserId(article.user.id);
     }
   }, [article]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({ title, content, status, userId });
+    onSubmit({ title, content, userId });
   };
 
   const titleLength = title.length;
@@ -107,34 +104,6 @@ export default function ArticleForm({
           </div>
         </div>
       )}
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          ステータス
-        </label>
-        <div className="flex space-x-4">
-          <label className="inline-flex items-center">
-            <input
-              type="radio"
-              value="draft"
-              checked={status === 'draft'}
-              onChange={(e) => setStatus(e.target.value as ArticleStatus)}
-              className="form-radio h-4 w-4 text-blue-600"
-            />
-            <span className="ml-2 text-sm text-gray-700">下書き</span>
-          </label>
-          <label className="inline-flex items-center">
-            <input
-              type="radio"
-              value="published"
-              checked={status === 'published'}
-              onChange={(e) => setStatus(e.target.value as ArticleStatus)}
-              className="form-radio h-4 w-4 text-blue-600"
-            />
-            <span className="ml-2 text-sm text-gray-700">公開</span>
-          </label>
-        </div>
-      </div>
 
       <div className="flex justify-end space-x-3 pt-4 border-t">
         <button

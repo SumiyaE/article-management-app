@@ -4,6 +4,8 @@ import { PaginateQuery } from 'nestjs-paginate';
 import { paginate } from 'nestjs-paginate';
 import { ArticlesService } from './articles.service';
 import { ArticleEntity } from './entities/article.entity';
+import { ArticleContentDraftEntity } from './entities/article-content-draft.entity';
+import { ArticleContentPublishedEntity } from './entities/article-content-published.entity';
 import { UserEntity } from '../users/entities/user.entity';
 import { OrganizationEntity } from '../organizations/entities/organization.entity';
 
@@ -39,14 +41,23 @@ const createMockUser = (overrides?: Partial<UserEntity>): UserEntity => ({
   ...overrides,
 });
 
-const createMockArticle = (overrides?: Partial<ArticleEntity>): ArticleEntity => ({
+const createMockContentDraft = (overrides?: Partial<ArticleContentDraftEntity>): ArticleContentDraftEntity => ({
   id: 1,
   title: 'テスト記事',
   content: 'テスト本文',
-  status: 'draft',
+  createdAt: new Date('2024-01-01'),
+  updatedAt: new Date('2024-01-01'),
+  article: {} as ArticleEntity,
+  ...overrides,
+});
+
+const createMockArticle = (overrides?: Partial<ArticleEntity>): ArticleEntity => ({
+  id: 1,
   createdAt: new Date('2024-01-01'),
   updatedAt: new Date('2024-01-01'),
   user: createMockUser(),
+  contentDraft: createMockContentDraft(),
+  contentPublishedVersions: [],
   ...overrides,
 });
 
@@ -55,16 +66,30 @@ const createMockArticle = (overrides?: Partial<ArticleEntity>): ArticleEntity =>
 // ============================================
 describe('ArticlesService', () => {
   let service: ArticlesService;
-  let mockRepository: Record<string, jest.Mock>;
+  let mockArticleRepository: Record<string, jest.Mock>;
+  let mockDraftRepository: Record<string, jest.Mock>;
+  let mockPublishedRepository: Record<string, jest.Mock>;
 
   beforeEach(async () => {
     // 各テストでモックをリセット
-    mockRepository = {
+    mockArticleRepository = {
       find: jest.fn(),
-      findOneBy: jest.fn(),
+      findOne: jest.fn(),
       save: jest.fn(),
-      update: jest.fn(),
+      create: jest.fn(),
       delete: jest.fn(),
+    };
+
+    mockDraftRepository = {
+      create: jest.fn(),
+      update: jest.fn(),
+    };
+
+    mockPublishedRepository = {
+      create: jest.fn(),
+      save: jest.fn(),
+      find: jest.fn(),
+      findOne: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -72,7 +97,15 @@ describe('ArticlesService', () => {
         ArticlesService,
         {
           provide: getRepositoryToken(ArticleEntity),
-          useValue: mockRepository,
+          useValue: mockArticleRepository,
+        },
+        {
+          provide: getRepositoryToken(ArticleContentDraftEntity),
+          useValue: mockDraftRepository,
+        },
+        {
+          provide: getRepositoryToken(ArticleContentPublishedEntity),
+          useValue: mockPublishedRepository,
         },
       ],
     }).compile();
@@ -92,8 +125,8 @@ describe('ArticlesService', () => {
 
     it('ページネーション付きで記事の一覧を返す', async () => {
       const mockArticles = [
-        createMockArticle({ id: 1, title: '記事1' }),
-        createMockArticle({ id: 2, title: '記事2' }),
+        createMockArticle({ id: 1 }),
+        createMockArticle({ id: 2 }),
       ];
       const mockPaginatedResult = {
         data: mockArticles,
@@ -143,17 +176,20 @@ describe('ArticlesService', () => {
   // ============================================
   describe('findOne', () => {
     it('指定したIDの記事を返す', async () => {
-      const mockArticle = createMockArticle({ id: 1, title: '特定の記事' });
-      mockRepository.findOneBy.mockResolvedValue(mockArticle);
+      const mockArticle = createMockArticle({ id: 1 });
+      mockArticleRepository.findOne.mockResolvedValue(mockArticle);
 
       const result = await service.findOne(1);
 
       expect(result).toEqual(mockArticle);
-      expect(mockRepository.findOneBy).toHaveBeenCalledWith({ id: 1 });
+      expect(mockArticleRepository.findOne).toHaveBeenCalledWith({
+        where: { id: 1 },
+        relations: ['contentDraft', 'contentPublishedVersions', 'user', 'user.organization'],
+      });
     });
 
     it('存在しないIDの場合はnullを返す', async () => {
-      mockRepository.findOneBy.mockResolvedValue(null);
+      mockArticleRepository.findOne.mockResolvedValue(null);
 
       const result = await service.findOne(999);
 
@@ -169,40 +205,108 @@ describe('ArticlesService', () => {
       const dto = {
         title: '新しい記事',
         content: '新しい内容',
-        status: 'draft' as const,
         userId: 1,
       };
-      const savedArticle = createMockArticle({ id: 3, ...dto });
-      mockRepository.save.mockResolvedValue(savedArticle);
+      const mockDraft = createMockContentDraft({ title: dto.title, content: dto.content });
+      const savedArticle = createMockArticle({ id: 3, contentDraft: mockDraft });
+
+      mockDraftRepository.create.mockReturnValue(mockDraft);
+      mockArticleRepository.create.mockReturnValue(savedArticle);
+      mockArticleRepository.save.mockResolvedValue(savedArticle);
+      mockArticleRepository.findOne.mockResolvedValue(savedArticle);
 
       const result = await service.create(dto);
 
-      expect(result.title).toBe(dto.title);
-      expect(result.content).toBe(dto.content);
-      expect(mockRepository.save).toHaveBeenCalledWith(dto);
+      expect(result).toEqual(savedArticle);
+      expect(mockDraftRepository.create).toHaveBeenCalled();
+      expect(mockArticleRepository.save).toHaveBeenCalled();
     });
   });
 
   // ============================================
-  // update
+  // getDraft
   // ============================================
-  describe('update', () => {
-    it('記事を更新する', async () => {
-      const dto = { title: '更新後のタイトル' };
-      mockRepository.update.mockResolvedValue({ affected: 1 });
+  describe('getDraft', () => {
+    it('記事の下書きを返す', async () => {
+      const mockDraft = createMockContentDraft({ id: 1, title: 'テスト下書き' });
+      const mockArticle = createMockArticle({ id: 1, contentDraft: mockDraft });
+      mockArticleRepository.findOne.mockResolvedValue(mockArticle);
 
-      const result = await service.update(1, dto);
+      const result = await service.getDraft(1);
 
-      expect(result.affected).toBe(1);
-      expect(mockRepository.update).toHaveBeenCalledWith(1, dto);
+      expect(result).toEqual(mockDraft);
     });
 
-    it('存在しない記事の場合はaffectedが0', async () => {
-      mockRepository.update.mockResolvedValue({ affected: 0 });
+    it('存在しない記事の場合はnullを返す', async () => {
+      mockArticleRepository.findOne.mockResolvedValue(null);
 
-      const result = await service.update(999, { title: 'test' });
+      const result = await service.getDraft(999);
 
-      expect(result.affected).toBe(0);
+      expect(result).toBeNull();
+    });
+  });
+
+  // ============================================
+  // updateDraft
+  // ============================================
+  describe('updateDraft', () => {
+    it('下書きを更新する', async () => {
+      const dto = { title: '更新後のタイトル' };
+      const mockDraft = createMockContentDraft({ id: 1, title: 'テスト下書き' });
+      const mockArticle = createMockArticle({ id: 1, contentDraft: mockDraft });
+      const updatedDraft = { ...mockDraft, title: dto.title };
+
+      mockArticleRepository.findOne
+        .mockResolvedValueOnce(mockArticle)
+        .mockResolvedValueOnce({ ...mockArticle, contentDraft: updatedDraft });
+      mockDraftRepository.update.mockResolvedValue({ affected: 1 });
+
+      const result = await service.updateDraft(1, dto);
+
+      expect(mockDraftRepository.update).toHaveBeenCalledWith(mockDraft.id, { title: dto.title });
+      expect(result?.title).toBe(dto.title);
+    });
+
+    it('存在しない記事の場合はnullを返す', async () => {
+      mockArticleRepository.findOne.mockResolvedValue(null);
+
+      const result = await service.updateDraft(999, { title: 'test' });
+
+      expect(result).toBeNull();
+    });
+  });
+
+  // ============================================
+  // publish
+  // ============================================
+  describe('publish', () => {
+    it('下書きを公開する', async () => {
+      const mockDraft = createMockContentDraft({ id: 1, title: '公開タイトル', content: '公開内容' });
+      const mockArticle = createMockArticle({ id: 1, contentDraft: mockDraft });
+      const mockPublished: ArticleContentPublishedEntity = {
+        id: 1,
+        title: mockDraft.title,
+        content: mockDraft.content,
+        publishedAt: new Date(),
+        article: mockArticle,
+      };
+
+      mockArticleRepository.findOne.mockResolvedValue(mockArticle);
+      mockPublishedRepository.create.mockReturnValue(mockPublished);
+      mockPublishedRepository.save.mockResolvedValue(mockPublished);
+
+      const result = await service.publish(1);
+
+      expect(result?.title).toBe(mockDraft.title);
+      expect(mockPublishedRepository.save).toHaveBeenCalled();
+    });
+
+    it('存在しない記事の場合はnullを返す', async () => {
+      mockArticleRepository.findOne.mockResolvedValue(null);
+
+      const result = await service.publish(999);
+
+      expect(result).toBeNull();
     });
   });
 
@@ -211,16 +315,16 @@ describe('ArticlesService', () => {
   // ============================================
   describe('remove', () => {
     it('記事を削除する', async () => {
-      mockRepository.delete.mockResolvedValue({ affected: 1 });
+      mockArticleRepository.delete.mockResolvedValue({ affected: 1 });
 
       const result = await service.remove(1);
 
       expect(result.affected).toBe(1);
-      expect(mockRepository.delete).toHaveBeenCalledWith(1);
+      expect(mockArticleRepository.delete).toHaveBeenCalledWith(1);
     });
 
     it('存在しない記事の場合はaffectedが0', async () => {
-      mockRepository.delete.mockResolvedValue({ affected: 0 });
+      mockArticleRepository.delete.mockResolvedValue({ affected: 0 });
 
       const result = await service.remove(999);
 

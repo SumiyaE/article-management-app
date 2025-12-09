@@ -1,11 +1,12 @@
 import axios from 'axios';
 import type {
   Article,
+  ArticleContentDraft,
+  ArticleContentPublished,
   PaginatedResponse,
   CreateArticleDto,
-  UpdateArticleDto,
+  UpdateArticleDraftDto,
   UpdateUserDto,
-  UpdateResultDto,
   DeleteResultDto,
   ArticleQueryParams,
   User,
@@ -35,13 +36,35 @@ export const articlesApi = {
     return data;
   },
 
-  update: async (id: number, dto: UpdateArticleDto): Promise<UpdateResultDto> => {
-    const { data } = await apiClient.patch<UpdateResultDto>(`/articles/${id}`, dto);
+  delete: async (id: number): Promise<DeleteResultDto> => {
+    const { data } = await apiClient.delete<DeleteResultDto>(`/articles/${id}`);
     return data;
   },
 
-  delete: async (id: number): Promise<DeleteResultDto> => {
-    const { data } = await apiClient.delete<DeleteResultDto>(`/articles/${id}`);
+  // Draft operations
+  getDraft: async (id: number): Promise<ArticleContentDraft> => {
+    const { data } = await apiClient.get<ArticleContentDraft>(`/articles/${id}/draft`);
+    return data;
+  },
+
+  updateDraft: async (id: number, dto: UpdateArticleDraftDto): Promise<ArticleContentDraft> => {
+    const { data } = await apiClient.patch<ArticleContentDraft>(`/articles/${id}/draft`, dto);
+    return data;
+  },
+
+  // Publish operations
+  publish: async (id: number): Promise<ArticleContentPublished> => {
+    const { data } = await apiClient.post<ArticleContentPublished>(`/articles/${id}/publish`);
+    return data;
+  },
+
+  getPublishedVersions: async (id: number): Promise<ArticleContentPublished[]> => {
+    const { data } = await apiClient.get<ArticleContentPublished[]>(`/articles/${id}/published`);
+    return data;
+  },
+
+  getLatestPublished: async (id: number): Promise<ArticleContentPublished> => {
+    const { data } = await apiClient.get<ArticleContentPublished>(`/articles/${id}/published/latest`);
     return data;
   },
 };

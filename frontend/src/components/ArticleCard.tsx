@@ -7,6 +7,8 @@ interface ArticleCardProps {
 }
 
 export default function ArticleCard({ article }: ArticleCardProps) {
+  const isPublished = article.contentPublishedVersions && article.contentPublishedVersions.length > 0;
+
   return (
     <Link
       to={`/articles/${article.id}`}
@@ -18,19 +20,19 @@ export default function ArticleCard({ article }: ArticleCardProps) {
             <div className="flex items-center space-x-2 mb-2">
               <span
                 className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                  article.status === 'published'
+                  isPublished
                     ? 'bg-green-100 text-green-800'
                     : 'bg-yellow-100 text-yellow-800'
                 }`}
               >
-                {article.status === 'published' ? '公開' : '下書き'}
+                {isPublished ? '公開済み' : '下書き'}
               </span>
             </div>
             <h3 className="text-lg font-semibold text-gray-900 truncate">
-              {article.title}
+              {article.contentDraft.title}
             </h3>
             <p className="mt-1 text-sm text-gray-500 line-clamp-2">
-              {article.content || '内容なし'}
+              {article.contentDraft.content || '内容なし'}
             </p>
           </div>
         </div>

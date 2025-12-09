@@ -18,17 +18,31 @@ export interface User {
   organization: Organization;
 }
 
-// Article
-export type ArticleStatus = 'draft' | 'published';
-
-export interface Article {
+// Article Content Draft
+export interface ArticleContentDraft {
   id: number;
   title: string;
   content: string;
-  status: ArticleStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Article Content Published
+export interface ArticleContentPublished {
+  id: number;
+  title: string;
+  content: string;
+  publishedAt: string;
+}
+
+// Article
+export interface Article {
+  id: number;
   createdAt: string;
   updatedAt: string;
   user: User;
+  contentDraft: ArticleContentDraft;
+  contentPublishedVersions: ArticleContentPublished[];
 }
 
 // Pagination
@@ -62,14 +76,12 @@ export interface PaginatedResponse<T> {
 export interface CreateArticleDto {
   title: string;
   content?: string;
-  status: ArticleStatus;
   userId: number;
 }
 
-export interface UpdateArticleDto {
+export interface UpdateArticleDraftDto {
   title?: string;
   content?: string;
-  status?: ArticleStatus;
 }
 
 export interface UpdateUserDto {
@@ -88,7 +100,7 @@ export interface DeleteResultDto {
 
 // Query params
 export type SortOrder = 'ASC' | 'DESC';
-export type ArticleSortField = 'title' | 'status' | 'updatedAt';
+export type ArticleSortField = 'contentDraft.title' | 'updatedAt';
 
 export interface ArticleQueryParams {
   page?: number;
@@ -96,6 +108,5 @@ export interface ArticleQueryParams {
   sortBy?: `${ArticleSortField}:${SortOrder}`;
   search?: string;
   'filter.user.organization.id': number;
-  'filter.status'?: ArticleStatus;
   'filter.user.id'?: number;
 }
