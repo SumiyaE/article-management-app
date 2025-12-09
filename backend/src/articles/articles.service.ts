@@ -41,7 +41,10 @@ export class ArticlesService {
   }
 
   findOne(id: number): Promise<ResponseArticleDto | null> {
-    return this.articlesRepository.findOneBy({ id });
+    return this.articlesRepository.findOne({
+      where: { id },
+      relations: ['user', 'user.organization'],
+    });
   }
 
   create(createArticleDto: RequestCreateArticleDto): Promise<ResponseArticleDto> {
