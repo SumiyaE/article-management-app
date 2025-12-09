@@ -72,6 +72,11 @@ export interface UpdateArticleDto {
   status?: ArticleStatus;
 }
 
+export interface UpdateUserDto {
+  name?: string;
+  thumbnailImage?: string | null;
+}
+
 // Response DTOs
 export interface UpdateResultDto {
   affected: number;

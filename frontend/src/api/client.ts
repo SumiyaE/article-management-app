@@ -4,6 +4,7 @@ import type {
   PaginatedResponse,
   CreateArticleDto,
   UpdateArticleDto,
+  UpdateUserDto,
   UpdateResultDto,
   DeleteResultDto,
   ArticleQueryParams,
@@ -51,6 +52,16 @@ export const usersApi = {
     const { data } = await apiClient.get<PaginatedResponse<User>>('/users', {
       params: { 'filter.organization.id': organizationId },
     });
+    return data;
+  },
+
+  getOne: async (id: number): Promise<User> => {
+    const { data } = await apiClient.get<User>(`/users/${id}`);
+    return data;
+  },
+
+  update: async (id: number, dto: UpdateUserDto): Promise<UpdateResultDto> => {
+    const { data } = await apiClient.patch<UpdateResultDto>(`/users/${id}`, dto);
     return data;
   },
 };

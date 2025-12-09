@@ -28,6 +28,12 @@ export default function Header() {
             >
               記事一覧
             </Link>
+            <Link
+              to="/settings"
+              className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+            >
+              ユーザー設定
+            </Link>
           </nav>
         </div>
       </div>
