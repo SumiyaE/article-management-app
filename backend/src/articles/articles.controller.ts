@@ -1,14 +1,19 @@
-import { Controller, Get, Post, Body, Patch, Delete, Param, ParseIntPipe, NotFoundException, BadRequestException } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiQuery, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Patch, Delete, Param, Query, ParseIntPipe, NotFoundException, BadRequestException } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiQuery, ApiResponse, ApiParam, ApiExtraModels, getSchemaPath } from '@nestjs/swagger';
 import { Paginate } from 'nestjs-paginate';
 import type { PaginateQuery } from 'nestjs-paginate';
 import { ArticlesService } from './articles.service';
+import type { PublishStatus } from './articles.service';
 import { RequestCreateArticleDto } from './dto/request/request-create-article.dto';
 import { RequestUpdateArticleDraftDto } from './dto/request/request-update-article-draft.dto';
-import { ResponseArticleDto } from './dto/response/response-article.dto';
+import { ResponseArticleAllDto } from './dto/response/response-article.dto';
 import { ResponseArticleContentDraftDto } from './dto/response/response-article-content-draft.dto';
 import { ResponseArticleContentPublishedDto } from './dto/response/response-article-content-published.dto';
-import { ResponsePaginatedArticleDto } from './dto/response/response-paginated-article.dto';
+import {
+  ResponsePaginatedArticleAllDto,
+  ResponsePaginatedArticleDraftDto,
+  ResponsePaginatedArticlePublishedDto,
+} from './dto/response/response-paginated-article.dto';
 import { ResponseDeleteResultDto } from '../common/dto/response/response-delete-result.dto';
 
 @ApiTags('Articles')
@@ -18,8 +23,8 @@ export class ArticlesController {
 
   @Post()
   @ApiOperation({ summary: '記事を作成' })
-  @ApiResponse({ status: 201, description: '作成成功', type: ResponseArticleDto })
-  create(@Body() createArticleDto: RequestCreateArticleDto): Promise<ResponseArticleDto> {
+  @ApiResponse({ status: 201, description: '作成成功', type: ResponseArticleAllDto })
+  create(@Body() createArticleDto: RequestCreateArticleDto): Promise<ResponseArticleAllDto> {
     return this.articlesService.create(createArticleDto);
   }
 
@@ -27,25 +32,40 @@ export class ArticlesController {
   @ApiOperation({ summary: '記事一覧を取得' })
   @ApiQuery({ name: 'filter.user.organization.id', required: true, type: Number, description: '組織ID（必須）', example: 1 })
   @ApiQuery({ name: 'filter.user.id', required: false, type: Number, description: 'ユーザーIDで絞り込み', example: 1 })
+  @ApiQuery({ name: 'publishStatus', required: false, enum: ['all', 'draft', 'published'], description: '公開状態で絞り込み（all: すべて、draft: 下書きのみ、published: 公開済み）' })
   @ApiQuery({ name: 'page', required: false, type: Number, description: 'ページ番号（デフォルト: 1）', example: 1 })
   @ApiQuery({ name: 'limit', required: false, type: Number, description: '取得件数（デフォルト: 20、最大: 100）', example: 20 })
   @ApiQuery({ name: 'sortBy', required: false, enum: ['contentDraft.title:ASC', 'contentDraft.title:DESC', 'updatedAt:ASC', 'updatedAt:DESC'], description: 'ソート順' })
   @ApiQuery({ name: 'search', required: false, description: '検索キーワード（title, content を検索）' })
-  @ApiResponse({ status: 200, description: '成功', type: ResponsePaginatedArticleDto })
+  @ApiExtraModels(ResponsePaginatedArticleAllDto, ResponsePaginatedArticleDraftDto, ResponsePaginatedArticlePublishedDto)
+  @ApiResponse({
+    status: 200,
+    description: '成功（publishStatusに応じてレスポンス構造が変化）',
+    schema: {
+      oneOf: [
+        { $ref: getSchemaPath(ResponsePaginatedArticleAllDto) },
+        { $ref: getSchemaPath(ResponsePaginatedArticleDraftDto) },
+        { $ref: getSchemaPath(ResponsePaginatedArticlePublishedDto) },
+      ],
+    },
+  })
   @ApiResponse({ status: 400, description: 'filter.user.organization.id is required' })
-  findAll(@Paginate() query: PaginateQuery): Promise<ResponsePaginatedArticleDto> {
+  findAll(
+    @Paginate() query: PaginateQuery,
+    @Query('publishStatus') publishStatus?: PublishStatus,
+  ): Promise<ResponsePaginatedArticleAllDto | ResponsePaginatedArticleDraftDto | ResponsePaginatedArticlePublishedDto> {
     if (!query.filter?.['user.organization.id']) {
       throw new BadRequestException('filter.user.organization.id is required');
     }
-    return this.articlesService.findAll(query);
+    return this.articlesService.findAll(query, publishStatus);
   }
 
   @Get(':id')
   @ApiOperation({ summary: '記事を取得' })
   @ApiParam({ name: 'id', type: Number, description: '記事ID', example: 1 })
-  @ApiResponse({ status: 200, description: '成功', type: ResponseArticleDto })
+  @ApiResponse({ status: 200, description: '成功', type: ResponseArticleAllDto })
   @ApiResponse({ status: 404, description: '記事が見つからない' })
-  async findOne(@Param('id', ParseIntPipe) id: number): Promise<ResponseArticleDto> {
+  async findOne(@Param('id', ParseIntPipe) id: number): Promise<ResponseArticleAllDto> {
     const article = await this.articlesService.findOne(id);
     if (!article) {
       throw new NotFoundException(`Article #${id} not found`);

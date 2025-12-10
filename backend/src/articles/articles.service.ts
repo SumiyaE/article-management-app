@@ -8,11 +8,18 @@ import { ArticleContentPublishedEntity } from './entities/article-content-publis
 import { UserEntity } from '../users/entities/user.entity';
 import { RequestCreateArticleDto } from './dto/request/request-create-article.dto';
 import { RequestUpdateArticleDraftDto } from './dto/request/request-update-article-draft.dto';
-import { ResponseArticleDto } from './dto/response/response-article.dto';
+import { ResponseArticleAllDto } from './dto/response/response-article.dto';
 import { ResponseArticleContentDraftDto } from './dto/response/response-article-content-draft.dto';
 import { ResponseArticleContentPublishedDto } from './dto/response/response-article-content-published.dto';
-import { ResponsePaginatedArticleDto } from './dto/response/response-paginated-article.dto';
+import {
+  ResponsePaginatedArticleAllDto,
+  ResponsePaginatedArticleDraftDto,
+  ResponsePaginatedArticlePublishedDto,
+} from './dto/response/response-paginated-article.dto';
 import { ResponseDeleteResultDto } from '../common/dto/response/response-delete-result.dto';
+
+// 公開状態フィルター
+export type PublishStatus = 'all' | 'draft' | 'published';
 
 // findAllの ページネーション, ソート, 検索, フィルター 設定
 export const ARTICLE_PAGINATION_CONFIG: PaginateConfig<ArticleEntity> = {
@@ -24,6 +31,11 @@ export const ARTICLE_PAGINATION_CONFIG: PaginateConfig<ArticleEntity> = {
   defaultSortBy: [['updatedAt', 'DESC']],
   // 検索設定
   searchableColumns: ['contentDraft.title', 'contentDraft.content'],
+  // フィルター設定
+  filterableColumns: {
+    'user.id': true,
+    'user.organization.id': true,
+  },
   // リレーション
   relations: ['contentDraft', 'contentPublishedVersions', 'user', 'user.organization'],
 };
@@ -41,18 +53,56 @@ export class ArticlesService {
 
   // === Article CRUD ===
 
-  findAll(query: PaginateQuery): Promise<ResponsePaginatedArticleDto> {
-    return paginate(query, this.articlesRepository, ARTICLE_PAGINATION_CONFIG);
+  async findAll(
+    query: PaginateQuery,
+    publishStatus?: PublishStatus,
+  ): Promise<ResponsePaginatedArticleAllDto | ResponsePaginatedArticleDraftDto | ResponsePaginatedArticlePublishedDto> {
+    // publishStatusに応じてrelationsを決定
+    const getRelations = (): string[] => {
+      const baseRelations = ['user', 'user.organization'];
+      if (publishStatus === 'published') {
+        return [...baseRelations, 'contentPublishedVersions'];
+      } else if (publishStatus === 'draft') {
+        return [...baseRelations, 'contentDraft'];
+      }
+      return [...baseRelations, 'contentDraft', 'contentPublishedVersions'];
+    };
+
+    const config: PaginateConfig<ArticleEntity> = {
+      ...ARTICLE_PAGINATION_CONFIG,
+      relations: getRelations(),
+    };
+
+    // 公開状態フィルターが指定された場合はQueryBuilderを使用
+    if (publishStatus && publishStatus !== 'all') {
+      const qb = this.articlesRepository.createQueryBuilder('article');
+
+      if (publishStatus === 'published') {
+        // 公開済み: contentPublishedVersionsが1件以上ある
+        qb.andWhere(
+          'EXISTS (SELECT 1 FROM article_content_published acp WHERE acp.article_id = article.id)',
+        );
+      } else if (publishStatus === 'draft') {
+        // 下書きのみ: contentPublishedVersionsが0件
+        qb.andWhere(
+          'NOT EXISTS (SELECT 1 FROM article_content_published acp WHERE acp.article_id = article.id)',
+        );
+      }
+
+      return paginate(query, qb, config);
+    }
+
+    return paginate(query, this.articlesRepository, config);
   }
 
-  findOne(id: number): Promise<ResponseArticleDto | null> {
+  findOne(id: number): Promise<ResponseArticleAllDto | null> {
     return this.articlesRepository.findOne({
       where: { id },
       relations: ['contentDraft', 'contentPublishedVersions', 'user', 'user.organization'],
     });
   }
 
-  async create(createArticleDto: RequestCreateArticleDto): Promise<ResponseArticleDto> {
+  async create(createArticleDto: RequestCreateArticleDto): Promise<ResponseArticleAllDto> {
     const { userId, title, content } = createArticleDto;
     const user = { id: userId } as UserEntity;
     const contentDraft = this.articleContentDraftsRepository.create({
@@ -64,7 +114,7 @@ export class ArticlesService {
       contentDraft,
     });
     const saved = await this.articlesRepository.save(article);
-    return this.findOne(saved.id) as Promise<ResponseArticleDto>;
+    return this.findOne(saved.id) as Promise<ResponseArticleAllDto>;
   }
 
   remove(id: number): Promise<ResponseDeleteResultDto> {

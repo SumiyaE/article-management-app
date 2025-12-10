@@ -6,7 +6,7 @@ import ArticleCard from '../components/ArticleCard';
 import Pagination from '../components/Pagination';
 import Modal from '../components/Modal';
 import ArticleForm from '../components/ArticleForm';
-import type { ArticleQueryParams } from '../types';
+import type { ArticleQueryParams, PublishStatus } from '../types';
 
 const ORGANIZATION_ID = 1; // デモ用固定値
 
@@ -22,12 +22,25 @@ const SORT_OPTIONS: SortOption[] = [
   { label: 'タイトル（Z→A）', value: 'contentDraft.title:DESC' },
 ];
 
+type PublishStatusOption = {
+  label: string;
+  value: PublishStatus | '';
+};
+
+const PUBLISH_STATUS_OPTIONS: PublishStatusOption[] = [
+  { label: 'すべて', value: '' },
+  { label: '下書きのみ', value: 'draft' },
+  { label: '公開済みのみ', value: 'published' },
+];
+
 export default function ArticleListPage() {
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState<ArticleQueryParams['sortBy']>('updatedAt:DESC');
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [filterUserId, setFilterUserId] = useState<number | ''>('');
+  const [publishStatus, setPublishStatus] = useState<PublishStatus | ''>('');
 
   const queryParams: ArticleQueryParams = useMemo(() => {
     const params: ArticleQueryParams = {
@@ -39,8 +52,14 @@ export default function ArticleListPage() {
     if (search) {
       params.search = search;
     }
+    if (filterUserId) {
+      params['filter.user.id'] = filterUserId;
+    }
+    if (publishStatus) {
+      params.publishStatus = publishStatus;
+    }
     return params;
-  }, [page, sortBy, search]);
+  }, [page, sortBy, search, filterUserId, publishStatus]);
 
   const { data, isLoading, error } = useArticles(queryParams);
   const { data: usersData } = useUsers(ORGANIZATION_ID);
@@ -108,6 +127,43 @@ export default function ArticleListPage() {
               </div>
             </form>
 
+            {/* 投稿者フィルター */}
+            <div className="w-full lg:w-40">
+              <select
+                value={filterUserId}
+                onChange={(e) => {
+                  setFilterUserId(e.target.value ? Number(e.target.value) : '');
+                  setPage(1);
+                }}
+                className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              >
+                <option value="">投稿者: すべて</option>
+                {users.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* 公開状態フィルター */}
+            <div className="w-full lg:w-40">
+              <select
+                value={publishStatus}
+                onChange={(e) => {
+                  setPublishStatus(e.target.value as PublishStatus | '');
+                  setPage(1);
+                }}
+                className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              >
+                {PUBLISH_STATUS_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             {/* ソート */}
             <div className="w-full lg:w-56">
               <select
@@ -128,22 +184,50 @@ export default function ArticleListPage() {
           </div>
 
           {/* アクティブフィルター表示 */}
-          {search && (
+          {(search || filterUserId || publishStatus) && (
             <div className="mt-3 flex flex-wrap gap-2">
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                検索: {search}
-                <button
-                  onClick={() => {
-                    setSearch('');
-                    setSearchInput('');
-                  }}
-                  className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-blue-200"
-                >
-                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
-                </button>
-              </span>
+              {search && (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  検索: {search}
+                  <button
+                    onClick={() => {
+                      setSearch('');
+                      setSearchInput('');
+                    }}
+                    className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-blue-200"
+                  >
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </span>
+              )}
+              {filterUserId && (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  投稿者: {users.find((u) => u.id === filterUserId)?.name}
+                  <button
+                    onClick={() => setFilterUserId('')}
+                    className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-green-200"
+                  >
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </span>
+              )}
+              {publishStatus && (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                  {PUBLISH_STATUS_OPTIONS.find((o) => o.value === publishStatus)?.label}
+                  <button
+                    onClick={() => setPublishStatus('')}
+                    className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-purple-200"
+                  >
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </span>
+              )}
             </div>
           )}
         </div>

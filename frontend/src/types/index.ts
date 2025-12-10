@@ -41,8 +41,8 @@ export interface Article {
   createdAt: string;
   updatedAt: string;
   user: User;
-  contentDraft: ArticleContentDraft;
-  contentPublishedVersions: ArticleContentPublished[];
+  contentDraft?: ArticleContentDraft;
+  contentPublishedVersions?: ArticleContentPublished[];
 }
 
 // Pagination
@@ -101,6 +101,7 @@ export interface DeleteResultDto {
 // Query params
 export type SortOrder = 'ASC' | 'DESC';
 export type ArticleSortField = 'contentDraft.title' | 'updatedAt';
+export type PublishStatus = 'all' | 'draft' | 'published';
 
 export interface ArticleQueryParams {
   page?: number;
@@ -109,4 +110,5 @@ export interface ArticleQueryParams {
   search?: string;
   'filter.user.organization.id': number;
   'filter.user.id'?: number;
+  publishStatus?: PublishStatus;
 }

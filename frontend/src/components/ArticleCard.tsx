@@ -9,6 +9,12 @@ interface ArticleCardProps {
 export default function ArticleCard({ article }: ArticleCardProps) {
   const isPublished = article.contentPublishedVersions && article.contentPublishedVersions.length > 0;
 
+  // contentDraftがあればそれを使用、なければ最新の公開版を使用
+  const displayContent = article.contentDraft
+    ?? (article.contentPublishedVersions?.[0]);
+  const title = displayContent?.title ?? '（タイトルなし）';
+  const content = displayContent?.content ?? '';
+
   return (
     <Link
       to={`/articles/${article.id}`}
@@ -29,10 +35,10 @@ export default function ArticleCard({ article }: ArticleCardProps) {
               </span>
             </div>
             <h3 className="text-lg font-semibold text-gray-900 truncate">
-              {article.contentDraft.title}
+              {title}
             </h3>
             <p className="mt-1 text-sm text-gray-500 line-clamp-2">
-              {article.contentDraft.content || '内容なし'}
+              {content || '内容なし'}
             </p>
           </div>
         </div>
