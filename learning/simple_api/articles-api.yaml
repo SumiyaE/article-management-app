@@ -1,0 +1,52 @@
+openapi: 3.0.3
+info:
+  title: articlets
+  version: 1.0.0
+  description: 記事を取得するAPI
+
+servers:
+  - url: https://api.content-platform.com/v1
+paths:
+  /articles:
+    get:
+      operationId: getArticles
+      security: []
+      summary: 記事の一覧を取得する
+      responses:
+        "200":
+          description: 記事一覧の取得に成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Article"
+  /articles/{id}:
+    get:
+      operationId: getArticleById
+      security: []
+      summary: idを指定して記事を取得する
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: 記事の取得に成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Article"
+components:
+  schemas:
+    Article:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        content:
+          type: string
