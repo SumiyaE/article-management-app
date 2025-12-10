@@ -11,7 +11,8 @@ import { OrganizationEntity } from '../organizations/entities/organization.entit
 
 // nestjs-paginate のモック
 jest.mock('nestjs-paginate', () => ({
-  ...jest.requireActual('nestjs-paginate'),
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  ...jest.requireActual<typeof import('nestjs-paginate')>('nestjs-paginate'),
   paginate: jest.fn(),
 }));
 
