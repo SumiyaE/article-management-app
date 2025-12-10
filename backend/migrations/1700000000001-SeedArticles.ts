@@ -13,7 +13,7 @@ export class SeedArticles1700000000001 implements MigrationInterface {
         // テストユーザーを作成（organization_idを紐付け）
         await queryRunner.query(`
             INSERT INTO users (name, thumbnail_image, organization_id) VALUES
-            ('テストユーザー1', 'https://example.com/user1.png', 1),
+            ('テストユーザー1', NULL, 1),
             ('テストユーザー2', NULL, 1),
             ('サンプルユーザー', NULL, 2)
         `);

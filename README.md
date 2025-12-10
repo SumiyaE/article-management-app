@@ -37,7 +37,19 @@ docker compose up -d
 | Swagger UI | http://localhost:3000/api | API ドキュメント |
 | MySQL | localhost:3306 | データベース |
 
-### 3. 動作確認
+### 3. 初期データの投入
+
+初回起動時はデータベースが空の状態です。以下のコマンドで初期データを投入してください：
+
+```bash
+docker compose exec backend npm run db:reset
+```
+
+このコマンドは以下を実行します：
+- データベーススキーマの再作成
+- テスト用の組織・ユーザー・記事データの投入
+
+### 4. 動作確認
 
 ```bash
 # APIの疎通確認

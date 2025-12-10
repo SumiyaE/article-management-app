@@ -18,6 +18,7 @@ services:
       - ./backend/package.json:/app/package.json
       - ./backend/tsconfig.json:/app/tsconfig.json
       - ./backend/nest-cli.json:/app/nest-cli.json
+      - ./backend/migrations:/app/migrations
 
   frontend:
     build:
