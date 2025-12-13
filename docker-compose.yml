@@ -11,8 +11,15 @@ services:
       DB_USERNAME: root
       DB_PASSWORD: root
       DB_DATABASE: articles_db
+      # OpenTelemetry設定
+      OTEL_SERVICE_NAME: article-management-api
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_NODE_RESOURCE_DETECTORS: env,host,os
+      NODE_OPTIONS: --require @opentelemetry/auto-instrumentations-node/register
     depends_on:
       - db
+      - otel-collector
     volumes:
       - ./backend/src:/app/src
       - ./backend/package.json:/app/package.json
