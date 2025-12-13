@@ -46,5 +46,13 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
 
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+    environment:
+      COLLECTOR_OTLP_ENABLED: true
+
 volumes:
   mysql_data:
