@@ -11,8 +11,15 @@ services:
       DB_USERNAME: root
       DB_PASSWORD: root
       DB_DATABASE: articles_db
+      # OpenTelemetry設定
+      OTEL_SERVICE_NAME: article-management-api
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_NODE_RESOURCE_DETECTORS: env,host,os
+      NODE_OPTIONS: --require @opentelemetry/auto-instrumentations-node/register
     depends_on:
       - db
+      - otel-collector
     volumes:
       - ./backend/src:/app/src
       - ./backend/package.json:/app/package.json
@@ -45,6 +52,24 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+    environment:
+      COLLECTOR_OTLP_ENABLED: true
+
+  # OpenTelemetry Collector: アプリからトレースを受信し、Jaegerに転送
+  otel-collector:
+    image: otel/opentelemetry-collector:latest
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otelcol/config.yaml  # 設定ファイルをマウント
+    ports:
+      - "4318:4318"    # OTLP/HTTP受信ポート（NestJSからの受信用）
+    depends_on:
+      - jaeger         # Jaegerが先に起動している必要あり
 
 volumes:
   mysql_data:
