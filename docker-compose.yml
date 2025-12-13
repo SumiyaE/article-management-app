@@ -54,5 +54,15 @@ services:
     environment:
       COLLECTOR_OTLP_ENABLED: true
 
+  # OpenTelemetry Collector: アプリからトレースを受信し、Jaegerに転送
+  otel-collector:
+    image: otel/opentelemetry-collector:latest
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otelcol/config.yaml  # 設定ファイルをマウント
+    ports:
+      - "4318:4318"    # OTLP/HTTP受信ポート（NestJSからの受信用）
+    depends_on:
+      - jaeger         # Jaegerが先に起動している必要あり
+
 volumes:
   mysql_data:

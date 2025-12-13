@@ -1,0 +1,25 @@
+# データの受け取り方の定義
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+
+# データの加工法の定義
+processors:
+  batch:
+
+# データの送り先の定義
+exporters:
+  otlp/jaeger:
+    endpoint: jaeger:4317
+    tls:
+      insecure: true
+
+# パイプラインの組み立て設定
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp/jaeger]
