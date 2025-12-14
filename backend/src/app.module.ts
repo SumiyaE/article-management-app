@@ -10,6 +10,7 @@ import { ArticleContentDraftEntity } from './articles/entities/article-content-d
 import { ArticleContentPublishedEntity } from './articles/entities/article-content-published.entity';
 import { UserEntity } from './users/entities/user.entity';
 import { OrganizationEntity } from './organizations/entities/organization.entity';
+import { LoggerModule } from 'nestjs-pino';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { OrganizationEntity } from './organizations/entities/organization.entity
       entities: [ArticleEntity, ArticleContentDraftEntity, ArticleContentPublishedEntity, UserEntity, OrganizationEntity],
       synchronize: true,
     }),
+    LoggerModule.forRoot(),
     ArticlesModule,
     UsersModule,
     OrganizationsModule,
