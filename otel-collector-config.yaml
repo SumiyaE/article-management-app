@@ -15,6 +15,10 @@ exporters:
     endpoint: jaeger:4317
     tls:
       insecure: true
+  otlp/honeycomb:
+    endpoint: api.honeycomb.io:443
+    headers:
+      x-honeycomb-team: ${HONEYCOMB_API_KEY}
 
 # パイプラインの組み立て設定
 service:
@@ -22,4 +26,4 @@ service:
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [otlp/jaeger]
+      exporters: [otlp/jaeger, otlp/honeycomb]
